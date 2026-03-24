@@ -5,6 +5,7 @@ from flask import Flask, render_template, request, jsonify, url_for  # Added url
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer
+from flask import session
 
 load_dotenv() 
 
@@ -27,7 +28,7 @@ db = SQLAlchemy(app)
 mail = Mail(app)
 serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
-class User(db.Model):
+class UserData(db.Model):
     username = db.Column(db.String(100), primary_key=True)
     email = db.Column(db.String(120), nullable=False)
     password = db.Column(db.Text, nullable=False)
@@ -66,10 +67,10 @@ def register():
     username = data.get('username')
     email = data.get('email')
 
-    if UserMessage.query.filter_by(username=username).first():
+    if UserData.query.filter_by(username=username).first():
         return jsonify({"status": "error", "message": "Username already taken"}), 400
     
-    new_user = UserMessage(
+    new_user = UserData(
         username=username,
         email=email,
         password=data.get('password'),
@@ -100,7 +101,7 @@ def confirm_email(token):
     except:
         return "<h1>The confirmation link is invalid or has expired.</h1>"
 
-    user = UserMessage.query.filter_by(username=username).first()
+    user = UserData.query.filter_by(username=username).first()
     if user:
         if user.is_verified:
             return "<h1>Account already verified. Please log in.</h1>"
@@ -110,6 +111,52 @@ def confirm_email(token):
             return "<h1>Account verified successfully! You can now close this window.</h1>"
     
     return "<h1>User not found.</h1>"
+
+@app.route('/api/content/login-view')
+def get_login_view():
+    return render_template('login_content.html')
+
+@app.route('/api/content/register-view')
+def get_register_view():
+    return render_template('register_content.html')
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+
+    user = UserData.query.filter_by(username=username).first()
+
+    if not user:
+        return jsonify({"status": "error", "message": "Username not found"}), 404
+    
+    if user.password != password:
+        return jsonify({"status": "error", "message": "Incorrect password"}), 401
+    
+    if not user.is_verified:
+        return jsonify({"status": "error", "message": "Please verify your email first."}), 403
+
+    # --- NEW SESSION LOGIC ---
+    session['user'] = user.username
+    return jsonify({"status": "success", "message": "Logged in successfully!"})
+
+@app.route('/api/logout', methods=['POST'])
+def logout():
+    session.pop('user', None)
+    return jsonify({"status": "success", "message": "Logged out"})
+
+@app.route('/api/check-auth')
+def check_auth():
+    if 'user' in session:
+        return jsonify({"is_logged_in": True, "user": session['user']})
+    return jsonify({"is_logged_in": False})
+
+@app.route('/api/content/personal-area')
+def get_personal_area():
+    if 'user' in session:
+        return render_template('personal_area_content.html')
+    return "Unauthorized", 401
 
 if __name__ == '__main__':
     with app.app_context():

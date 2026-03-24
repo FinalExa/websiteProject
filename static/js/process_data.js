@@ -44,4 +44,31 @@ async function handleRegistration(e) {
         messageDiv.style.color = "red";
         messageDiv.innerText = "Server connection failed.";
     }
+	
+	async function loadLoginView() {
+		const container = document.getElementById('auth-container');
+		const title = document.getElementById('user-title');
+		if (!container) return;
+
+		const response = await fetch('/api/content/login-view');
+		container.innerHTML = await response.text();
+		title.innerText = "Login";
+		
+		// Attach login submit logic here later
+	}
+
+	async function loadRegisterView() {
+		const container = document.getElementById('auth-container');
+		const title = document.getElementById('user-title');
+		if (!container) return;
+
+		const response = await fetch('/api/content/register-view');
+		container.innerHTML = await response.text();
+		title.innerText = "Create Account";
+		
+		// Re-attach the registration listener we built earlier
+		if (typeof attachRegisterListener === "function") {
+			attachRegisterListener();
+		}
+	}
 }

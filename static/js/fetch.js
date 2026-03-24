@@ -15,5 +15,3 @@ async function loadExternalText() {
         document.getElementById('read-file-text').innerText = "Failed to load content from file.";
     }
 }
-
-loadExternalText();
