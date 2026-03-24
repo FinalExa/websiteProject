@@ -18,6 +18,12 @@ async function navigateTo(pageName) {
             if (typeof updateClock === "function") updateClock();
             if (typeof loadExternalText === "function") loadExternalText();
         }
+		
+		if (pageName === 'user') {
+			if (typeof attachRegisterListener === "function") {
+				attachRegisterListener();
+			}
+		}
     } catch (error) {
         console.error('Navigation error:', error);
     }

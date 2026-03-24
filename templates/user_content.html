@@ -1,3 +1,30 @@
 <div class="main-text">
-    <h2>User</h2>
+    <h2>Create Account</h2>
+    <form id="user-form" class="user-form">
+        <div class="form-group">
+            <input type="text" id="username" name="username" placeholder="Username" required>
+        </div>
+        
+        <div class="form-group">
+            <input type="email" id="email" name="email" placeholder="Email Address" required>
+        </div>
+
+        <div class="password-row">
+            <div class="form-group password-field">
+                <input type="password" id="password" name="password" placeholder="Password" required>
+            </div>
+            <div class="show-password-inline">
+                <input type="checkbox" id="toggle-pass" onclick="togglePasswordVisibility()">
+                <label for="toggle-pass">Show</label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm Password" required>
+        </div>
+
+        <button type="submit" class="nav-btn">Register</button>
+		
+		<div id="form-message" style="margin-top: 15px; min-height: 20px;"></div>
+    </form>
 </div>
