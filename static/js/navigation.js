@@ -1,53 +1,3 @@
-async function navigateTo(pageName) {
-    const main = document.getElementById('main-content');
-    const apiPath = `/api/content/${pageName}`;
-    const displayPath = `/${pageName}`;
-
-    try {
-        const response = await fetch(apiPath);
-        if (!response.ok) throw new Error('Page not found');
-        const html = await response.text();
-        
-        main.innerHTML = html;
-
-        if (window.location.pathname !== displayPath) {
-            window.history.pushState({ page: pageName }, "", displayPath);
-        }
-
-        // Handle specific page logic
-        if (pageName === 'home') {
-            if (typeof updateClock === "function") updateClock();
-            if (typeof loadExternalText === "function") loadExternalText();
-        }
-		
-        // When landing on the 'user' shell, load the login view by default
-		if (pageName === 'user') {
-            if (typeof loadLoginView === "function") {
-                loadLoginView();
-            }
-		}
-    } catch (error) {
-        console.error('Navigation error:', error);
-    }
-}
-
-// Logic for switching views within the User page
-async function loadLoginView() {
-    const container = document.getElementById('auth-container');
-    const title = document.getElementById('user-title');
-    if (!container) return;
-
-    try {
-        const response = await fetch('/api/content/login-view');
-        container.innerHTML = await response.text();
-        title.innerText = "Login";
-        
-        // attachLoginListener(); // You can add this once the login API is ready
-    } catch (error) {
-        console.error('Error loading login view:', error);
-    }
-}
-
 async function loadRegisterView() {
     const container = document.getElementById('auth-container');
     const title = document.getElementById('user-title');
@@ -58,7 +8,6 @@ async function loadRegisterView() {
         container.innerHTML = await response.text();
         title.innerText = "Create Account";
         
-        // Re-attach the registration submit listener
         if (typeof attachRegisterListener === "function") {
             attachRegisterListener();
         }
@@ -144,10 +93,14 @@ async function navigateTo(pageName) {
     let apiPath = `/api/content/${pageName}`;
     const displayPath = `/${pageName}`;
 
-	if (pageName === 'home') {
-		if (typeof updateClock === "function") updateClock();
-		if (typeof loadExternalText === "function") loadExternalText();
-	}
+    if (window.location.pathname !== displayPath) {
+        window.history.pushState({ page: pageName }, "", displayPath);
+    }
+
+    if (pageName === 'home') {
+        if (typeof updateClock === "function") updateClock();
+        if (typeof loadExternalText === "function") loadExternalText();
+    }
 	
     if (pageName === 'user') {
         const authCheck = await fetch('/api/check-auth');
@@ -156,8 +109,9 @@ async function navigateTo(pageName) {
         if (auth.is_logged_in) {
             const response = await fetch('/api/content/personal-area');
             main.innerHTML = await response.text();
-            document.getElementById('display-username').innerText = auth.user;
-            return; // Exit here
+            const userDisplay = document.getElementById('display-username');
+            if(userDisplay) userDisplay.innerText = auth.user;
+            return; 
         }
     }
 
