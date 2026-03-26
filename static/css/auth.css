@@ -15,7 +15,6 @@
     box-sizing: border-box;
 }
 
-/* RESTORED: Focus state */
 .form-group input:focus {
     border-color: #3498db;
     outline: none;
