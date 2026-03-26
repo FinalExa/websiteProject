@@ -54,17 +54,13 @@ function attachLoginListener() {
             const result = await response.json();
 
             if (response.ok) {
-                messageDiv.textContent = result.message;
-                messageDiv.style.color = "green";
-
-                setTimeout(() => {
-                    navigateTo('user'); 
-                }, 1000);
-
-            } else {
-                messageDiv.textContent = result.message;
-                messageDiv.style.color = "red";
-            }
+				messageDiv.textContent = result.message;
+				messageDiv.className = "text-success";
+				setTimeout(() => { navigateTo('user'); }, 1000);
+			} else {
+				messageDiv.textContent = result.message;
+				messageDiv.className = "text-error";
+			}
         } catch (error) {
             messageDiv.textContent = "Connection failed.";
             messageDiv.style.color = "red";

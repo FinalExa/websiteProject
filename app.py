@@ -25,7 +25,6 @@ db.init_app(app)
 mail.init_app(app)
 serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
-# Page Routes
 @app.route('/')
 @app.route('/home')
 @app.route('/about')
@@ -34,7 +33,6 @@ serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 def index():
     return render_template('index.html')
 
-# Dynamic Content API
 @app.route('/api/content/<page>')
 def get_content(page):
     templates = {
@@ -47,7 +45,6 @@ def get_content(page):
         return render_template(templates[page])
     return "Not Found", 404
 
-# Auth Endpoints
 @app.route('/api/register', methods=['POST'])
 def register():
     return auth.handle_register(request.get_json(), serializer, app.config['MAIL_USERNAME'])

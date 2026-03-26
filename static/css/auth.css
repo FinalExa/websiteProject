@@ -1,0 +1,60 @@
+.user-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 400px;
+    margin: 20px auto;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+.password-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.password-field { flex: 1; }
+
+.show-password-inline {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.85rem;
+    background: #eee;
+    padding: 8px 10px;
+    border-radius: 6px;
+    height: 38px;
+}
+
+#strength-meter {
+    height: 5px;
+    width: 0%;
+    transition: width 0.3s;
+    margin-top: 5px;
+    border-radius: 2px;
+}
+
+#strength-text {
+    font-size: 0.8rem;
+    display: block;
+    margin-top: 2px;
+}
+
+#form-message {
+    margin-top: 15px;
+    min-height: 20px;
+}
+
+.logout-btn {
+    background-color: #ff4d4d !important; /* Overriding base nav-btn color */
+    margin-top: 20px;
+}

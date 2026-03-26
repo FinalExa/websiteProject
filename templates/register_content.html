@@ -9,9 +9,8 @@
     <div class="password-row">
         <div class="form-group password-field">
             <input type="password" id="password" name="password" placeholder="Password" required oninput="checkPasswordStrength()">
-            
-            <div id="strength-meter" style="height: 5px; width: 0%; transition: width 0.3s; margin-top: 5px; border-radius: 2px;"></div>
-            <small id="strength-text" style="font-size: 0.8rem; display: block; margin-top: 2px;"></small>
+            <div id="strength-meter"></div>
+            <small id="strength-text"></small>
         </div>
         
         <div class="show-password-inline">
@@ -26,8 +25,8 @@
     <button type="submit" class="nav-btn">Register</button>
 </form>
 
-<div id="form-message" style="margin-top: 15px; min-height: 20px;"></div>
+<div id="form-message"></div>
 
-<p style="margin-top: 15px; font-size: 0.9rem;">
+<p class="auth-switch-text">
     Already registered? <a href="#" onclick="loadLoginView(); return false;">Login here.</a>
 </p>
