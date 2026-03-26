@@ -1,5 +1,6 @@
 import os
 import shutil
+import time
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, jsonify, session, url_for
 from itsdangerous import URLSafeTimedSerializer
@@ -40,9 +41,15 @@ def get_home_content():
 @app.route('/api/content/<page>')
 def get_content(page):
     public_pages = ['login-view', 'register-view', 'user']
-    
     if 'user' not in session and page not in public_pages:
         return "Unauthorized", 401
+    
+    if page == 'personal-area':
+        if 'user' in session:
+            username = session['user']
+            user_data = UserData.query.get(username)
+            pic = user_data.profile_pic_path if user_data.profile_pic_path else 'img/default-avatar.png'
+            return render_template('personal_area_content.html', profile_pic_url=url_for('static', filename=pic))
         
     templates = {
         'home': 'home_content.html',
@@ -97,7 +104,6 @@ def get_posts():
     
     output = []
     for post, user in results:
-        # Use the stored path or a default if none exists
         pic_url = user.profile_pic_path if user.profile_pic_path else 'img/default-avatar.png'
         
         output.append({
@@ -156,34 +162,33 @@ def upload_profile_pic():
     file = request.files['file']
     username = session['user']
     
-    # Path: static/img/profile_pictures/username
-    user_folder = os.path.join('static', 'img', 'profile_pictures', username)
+    user_folder = os.path.join(basedir, 'static', 'img', 'profile_pictures', username)
     
-    # exist_ok=True is safer for Windows permissions
-    os.makedirs(user_folder, exist_ok=True) 
+    for attempt in range(3):
+        try:
+            os.makedirs(user_folder, exist_ok=True)
+            break 
+        except PermissionError:
+            time.sleep(0.5)
+    else:
+        return jsonify({"status": "error", "message": "Folder is locked by another program (Git/Explorer)"}), 500
 
-    try:
-        for i in range(0, 5): 
-            old_file = os.path.join(user_folder, f"{i+1}.png")
-            new_file = os.path.join(user_folder, f"{i}.png")
-            
-            if i == 0 and os.path.exists(new_file):
-                os.remove(new_file)
-            
-            if os.path.exists(old_file):
-                os.rename(old_file, new_file)
-                
-        new_path = os.path.join(user_folder, "5.png")
-        file.save(new_path)
-        
-        user = UserData.query.get(username)
-        user.profile_pic_path = f"img/profile_pictures/{username}/5.png"
-        db.session.commit()
-        
-        return jsonify({"status": "success", "message": "Profile picture updated!"})
-        
-    except PermissionError:
-        return jsonify({"status": "error", "message": "Server file lock. Close any open images and try again."}), 500
+    for i in range(0, 6):
+        file_path = os.path.join(user_folder, f"{i}.png")
+        if os.path.exists(file_path):
+            if i == 0:
+                os.remove(file_path)
+            else:
+                os.rename(file_path, os.path.join(user_folder, f"{i-1}.png"))
+
+    new_path = os.path.join(user_folder, "5.png")
+    file.save(new_path)
+
+    user = UserData.query.get(username)
+    user.profile_pic_path = f"img/profile_pictures/{username}/5.png"
+    db.session.commit()
+
+    return jsonify({"status": "success", "message": "Profile picture updated!"})
 
 if __name__ == '__main__':
     with app.app_context():

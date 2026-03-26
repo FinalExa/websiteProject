@@ -1,18 +1,29 @@
-<div class="main-text">
-    <h2>Welcome, <span id="display-username">User</span>!</h2>
-    <p>This is your private dashboard.</p>
-	<div class="main-text">
-		<h2>Settings</h2>
-		<div class="profile-upload-section">
-			<p>Update Profile Picture:</p>
-			<input type="file" id="pic-upload" accept="image/*">
-			<button class="nav-btn" onclick="uploadPic()">Upload</button>
-		</div>
-	</div>
-    <div class="user-info">
+<div class="personal-area-container">
+    <div class="greeting-section">
+        <h1 class="welcome-text">Welcome, <span id="display-username">...</span>!</h1>
+        <p class="dashboard-subtext">This is your private dashboard.</p>
+    </div>
+
+    <div class="settings-card">
+        <h2 class="settings-title">Settings</h2>
+        
+        <div class="avatar-display-section">
+            <label class="upload-label">Current Avatar:</label>
+            <img src="{{ profile_pic_url }}" class="current-avatar" alt="Avatar">
+        </div>
+
+        <div class="upload-form-section">
+            <label for="pic-upload" class="upload-label">Update Profile Picture:</label>
+            <input type="file" id="pic-upload" accept="image/*">
+            <button class="nav-btn" style="background-color: #4B6A89; color: white;" onclick="uploadPic()">Upload</button>
+        </div>
+    </div>
+
+    <div class="status-section">
         <p>Status: <strong>Verified</strong></p>
     </div>
-    <button class="nav-btn logout-btn" onclick="handleLogout()">
-        Log Out
-    </button>
+
+    <div class="logout-section">
+        <button class="logout-btn" onclick="handleLogout()">Log Out</button>
+    </div>
 </div>
