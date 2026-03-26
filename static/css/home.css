@@ -1,3 +1,6 @@
+/* home.css */
+
+/* Clock Styles */
 #clock {
     font-size: 3rem;
     font-weight: bold;
@@ -11,4 +14,71 @@
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     text-align: center;
     width: fit-content;
+    margin-bottom: 20px;
+}
+
+/* Posting Interface */
+.post-input-area {
+    width: 100%;
+    height: 80px;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    font-family: inherit;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+/* Feed Container */
+#posts-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+/* Individual Post Card Style */
+.post-card {
+    text-align: left;
+    margin-bottom: 10px;
+    padding: 15px 25px;
+}
+
+.post-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+
+.post-author {
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.post-date {
+    color: #888;
+    font-size: 0.85rem;
+}
+
+.delete-post-btn {
+    background: #ff4d4d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.delete-post-btn:hover {
+    background: #cc0000;
 }

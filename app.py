@@ -3,14 +3,13 @@ from dotenv import load_dotenv
 from flask import Flask, render_template, request, jsonify, session
 from itsdangerous import URLSafeTimedSerializer
 
-from models import db, UserData
+from models import db, UserData, UserPost
 from mail_utils import mail
-import auth # Import our new logic file
+import auth
 
 load_dotenv()
 app = Flask(__name__)
 
-# Configs
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'project.db')
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-key-if-missing')
@@ -35,12 +34,21 @@ def index():
 
 @app.route('/api/content/<page>')
 def get_content(page):
+    public_pages = ['login-view', 'register-view', 'user']
+    
+    if 'user' not in session and page not in public_pages:
+        return jsonify({"status": "unauthorized", "message": "Please login"}), 401
+        
     templates = {
-        'home': 'home_content.html', 'about': 'about_content.html',
-        'contact': 'contact_content.html', 'user': 'user_content.html',
-        'login-view': 'login_content.html', 'register-view': 'register_content.html',
+        'home': 'home_content.html', 
+        'about': 'about_content.html',
+        'contact': 'contact_content.html', 
+        'user': 'user_content.html',
+        'login-view': 'login_content.html', 
+        'register-view': 'register_content.html',
         'personal-area': 'personal_area_content.html'
     }
+    
     if page in templates:
         return render_template(templates[page])
     return "Not Found", 404
@@ -74,6 +82,55 @@ def confirm_email(token):
     except:
         pass
     return "<h1>Invalid or expired link.</h1>"
+
+@app.route('/api/posts', methods=['GET'])
+def get_posts():
+    if 'user' not in session:
+        return jsonify({"status": "error", "message": "Login required"}), 401
+    
+    posts = UserPost.query.order_by(UserPost.date_posted.desc()).all()
+    return jsonify([{
+        "id": p.id,  # Ensure ID is included
+        "username": p.user_username,
+        "content": p.content,
+        "date": p.date_posted.strftime("%Y-%m-%d %H:%M")
+    } for p in posts])
+
+@app.route('/api/post', methods=['POST'])
+def create_post():
+    if 'user' not in session:
+        return jsonify({"status": "error", "message": "Login required"}), 401
+
+    user = UserData.query.filter_by(username=session['user']).first()
+    
+    if not user or not user.is_verified:
+        return jsonify({"status": "error", "message": "Verify your email to post."}), 403
+
+    data = request.get_json()
+    content = data.get('content')
+
+    if not content or len(content.strip()) == 0:
+        return jsonify({"status": "error", "message": "Post cannot be empty"}), 400
+
+    new_post = UserPost(content=content, user_username=user.username)
+    db.session.add(new_post)
+    db.session.commit()
+
+    return jsonify({"status": "success", "message": "Post created!"})
+
+@app.route('/api/delete-post/<int:post_id>', methods=['DELETE'])
+def delete_post(post_id):
+    if 'user' not in session:
+        return jsonify({"status": "error", "message": "Login required"}), 401
+    
+    post = UserPost.query.get_or_404(post_id)
+    
+    if post.user_username != session['user']:
+        return jsonify({"status": "error", "message": "You can only delete your own posts."}), 403
+    
+    db.session.delete(post)
+    db.session.commit()
+    return jsonify({"status": "success", "message": "Post deleted successfully!"})
 
 if __name__ == '__main__':
     with app.app_context():
