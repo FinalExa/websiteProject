@@ -47,14 +47,12 @@ function attachLoginListener() {
 
             const result = await response.json();
 
-            if (response.ok) {
-                messageDiv.textContent = result.message;
-                messageDiv.className = "text-success";
-                setTimeout(() => { navigateTo('user'); }, 1000);
-            } else {
-                messageDiv.textContent = result.message;
-                messageDiv.className = "text-error";
-            }
+			if (response.ok) {
+				showToast("Welcome back!", "success");
+				setTimeout(() => { navigateTo('user'); }, 1000);
+			} else {
+				showToast(result.message, "error");
+			}
         } catch (error) {
             messageDiv.textContent = "Connection failed.";
             messageDiv.className = "text-error";
@@ -63,8 +61,18 @@ function attachLoginListener() {
 }
 
 async function handleLogout() {
-    const response = await fetch('/api/logout', { method: 'POST' });
-    if (response.ok) {
-        navigateTo('user');
+    try {
+        const response = await fetch('/api/logout', { method: 'POST' });
+        
+        if (response.ok) {
+            showToast("Logged out successfully", 'success');
+            
+            navigateTo('user');
+        } else {
+            showToast("Logout failed. Please try again.", 'error');
+        }
+    } catch (error) {
+        console.error('Logout error:', error);
+        showToast("Connection error during logout.", 'error');
     }
 }
