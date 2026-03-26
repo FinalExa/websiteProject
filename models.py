@@ -8,6 +8,7 @@ class UserData(db.Model):
     email = db.Column(db.String(120), nullable=False)
     password = db.Column(db.Text, nullable=False)
     is_verified = db.Column(db.Boolean, default=False)
+    profile_pic_path = db.Column(db.String(255), nullable=True)
     posts = db.relationship('UserPost', backref='author', lazy=True)
 
     def __repr__(self):

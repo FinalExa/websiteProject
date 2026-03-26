@@ -29,24 +29,19 @@ async function loadPosts() {
     const posts = await response.json();
 
     container.innerHTML = posts.map(post => {
-        const isAuthor = auth.is_logged_in && auth.user === post.username;
-        const deleteBtn = isAuthor 
-            ? `<button onclick="deletePost(${post.id})" class="delete-post-btn">&times;</button>` 
-            : '';
-
-        return `
-            <div class="main-text post-card">
-                <div class="post-header">
-                    <div>
-                        <span class="post-author">@${post.username}</span>
-                        <span class="post-date">${post.date}</span>
-                    </div>
-                    ${deleteBtn}
-                </div>
-                <p>${post.content}</p>
-            </div>
-        `;
-    }).join('');
+		return `
+			<div class="main-text post-card">
+				<div class="post-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+					<img src="${post.profile_pic}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+					<div>
+						<span class="post-author" style="font-weight: bold;">@${post.username}</span>
+						<span class="post-date" style="font-size: 0.8rem; color: gray;">${post.date}</span>
+					</div>
+				</div>
+				<p>${post.content}</p>
+			</div>
+		`;
+	}).join('');
 }
 
 async function deletePost(postId) {

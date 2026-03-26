@@ -1,6 +1,7 @@
 import os
+import shutil
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, jsonify, session
+from flask import Flask, render_template, request, jsonify, session, url_for
 from itsdangerous import URLSafeTimedSerializer
 
 from models import db, UserData, UserPost
@@ -26,23 +27,25 @@ serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
 @app.route('/')
 @app.route('/home')
-@app.route('/about')
-@app.route('/contact')
 @app.route('/user')
 def index():
     return render_template('index.html')
+
+@app.route('/api/content/home')
+def get_home_content():
+    if 'user' not in session:
+        return "Unauthorized", 401 
+    return render_template('home_content.html')
 
 @app.route('/api/content/<page>')
 def get_content(page):
     public_pages = ['login-view', 'register-view', 'user']
     
     if 'user' not in session and page not in public_pages:
-        return jsonify({"status": "unauthorized", "message": "Please login"}), 401
+        return "Unauthorized", 401
         
     templates = {
-        'home': 'home_content.html', 
-        'about': 'about_content.html',
-        'contact': 'contact_content.html', 
+        'home': 'home_content.html',
         'user': 'user_content.html',
         'login-view': 'login_content.html', 
         'register-view': 'register_content.html',
@@ -88,13 +91,23 @@ def get_posts():
     if 'user' not in session:
         return jsonify({"status": "error", "message": "Login required"}), 401
     
-    posts = UserPost.query.order_by(UserPost.date_posted.desc()).all()
-    return jsonify([{
-        "id": p.id,  # Ensure ID is included
-        "username": p.user_username,
-        "content": p.content,
-        "date": p.date_posted.strftime("%Y-%m-%d %H:%M")
-    } for p in posts])
+    results = db.session.query(UserPost, UserData).join(
+        UserData, UserPost.user_username == UserData.username
+    ).order_by(UserPost.date_posted.desc()).all()
+    
+    output = []
+    for post, user in results:
+        # Use the stored path or a default if none exists
+        pic_url = user.profile_pic_path if user.profile_pic_path else 'img/default-avatar.png'
+        
+        output.append({
+            "id": post.id,
+            "username": post.user_username,
+            "content": post.content,
+            "date": post.date_posted.strftime("%Y-%m-%d %H:%M"),
+            "profile_pic": url_for('static', filename=pic_url)
+        })
+    return jsonify(output)
 
 @app.route('/api/post', methods=['POST'])
 def create_post():
@@ -131,6 +144,46 @@ def delete_post(post_id):
     db.session.delete(post)
     db.session.commit()
     return jsonify({"status": "success", "message": "Post deleted successfully!"})
+
+@app.route('/api/upload-profile-pic', methods=['POST'])
+def upload_profile_pic():
+    if 'user' not in session:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 401
+
+    if 'file' not in request.files:
+        return jsonify({"status": "error", "message": "No file part"}), 400
+
+    file = request.files['file']
+    username = session['user']
+    
+    # Path: static/img/profile_pictures/username
+    user_folder = os.path.join('static', 'img', 'profile_pictures', username)
+    
+    # exist_ok=True is safer for Windows permissions
+    os.makedirs(user_folder, exist_ok=True) 
+
+    try:
+        for i in range(0, 5): 
+            old_file = os.path.join(user_folder, f"{i+1}.png")
+            new_file = os.path.join(user_folder, f"{i}.png")
+            
+            if i == 0 and os.path.exists(new_file):
+                os.remove(new_file)
+            
+            if os.path.exists(old_file):
+                os.rename(old_file, new_file)
+                
+        new_path = os.path.join(user_folder, "5.png")
+        file.save(new_path)
+        
+        user = UserData.query.get(username)
+        user.profile_pic_path = f"img/profile_pictures/{username}/5.png"
+        db.session.commit()
+        
+        return jsonify({"status": "success", "message": "Profile picture updated!"})
+        
+    except PermissionError:
+        return jsonify({"status": "error", "message": "Server file lock. Close any open images and try again."}), 500
 
 if __name__ == '__main__':
     with app.app_context():

@@ -5,7 +5,6 @@
 		<title>John Website</title>
 		<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 		<link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
-		<link rel="stylesheet" href="{{ url_for('static', filename='css/about.css') }}">
 		<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
 		<link rel="stylesheet" href="{{ url_for('static', filename='css/notifications.css') }}">
 	</head>
@@ -13,12 +12,6 @@
 		<header><h1>John Website</h1></header>
 		<nav class="navbar">
 			<div class="nav-links">
-				<div class="center-group">
-					<button class="nav-btn" id="btn-home">Home</button>
-					<button class="nav-btn" id="btn-about">About</button>
-					<button class="nav-btn" id="btn-contact">Contact</button>
-				</div>
-
 				<div class="user-container">
 					<button class="nav-btn" id="btn-user">User</button>
 				</div>
@@ -38,5 +31,6 @@
 		<script src="{{ url_for('static', filename='js/process_data.js') }}"></script>
 		<script src="{{ url_for('static', filename='js/password_strength.js') }}"></script>
 		<script src="{{ url_for('static', filename='js/posts.js') }}"></script>
+		<script src="{{ url_for('static', filename='js/profile.js') }}"></script>
 	</body>
 </html>

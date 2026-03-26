@@ -1,6 +1,3 @@
-/* home.css */
-
-/* Clock Styles */
 #clock {
     font-size: 3rem;
     font-weight: bold;
@@ -17,7 +14,6 @@
     margin-bottom: 20px;
 }
 
-/* Posting Interface */
 .post-input-area {
     width: 100%;
     height: 80px;
@@ -29,7 +25,6 @@
     box-sizing: border-box;
 }
 
-/* Feed Container */
 #posts-container {
     width: 100%;
     display: flex;
@@ -39,7 +34,6 @@
     margin-top: 20px;
 }
 
-/* Individual Post Card Style */
 .post-card {
     text-align: left;
     margin-bottom: 10px;
@@ -48,10 +42,23 @@
 
 .post-header {
     display: flex;
-    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
     margin-bottom: 10px;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 5px;
+}
+
+.post-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #4B6A89;
+    background-color: #eee;
+}
+
+.post-info {
+    display: flex;
+    flex-direction: column;
 }
 
 .post-author {
@@ -60,8 +67,8 @@
 }
 
 .post-date {
-    color: #888;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
+    color: #7f8c8d;
 }
 
 .delete-post-btn {
