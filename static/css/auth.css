@@ -15,6 +15,12 @@
     box-sizing: border-box;
 }
 
+/* RESTORED: Focus state */
+.form-group input:focus {
+    border-color: #3498db;
+    outline: none;
+}
+
 .password-row {
     display: flex;
     align-items: center;
@@ -22,17 +28,27 @@
     width: 100%;
 }
 
-.password-field { flex: 1; }
+.password-field {
+    flex: 1;
+}
 
 .show-password-inline {
     display: flex;
     align-items: center;
     gap: 5px;
+    white-space: nowrap;
     font-size: 0.85rem;
+    color: #666;
     background: #eee;
     padding: 8px 10px;
     border-radius: 6px;
     height: 38px;
+    box-sizing: border-box;
+}
+
+.show-password-inline input {
+    cursor: pointer;
+    margin: 0;
 }
 
 #strength-meter {
@@ -49,12 +65,7 @@
     margin-top: 2px;
 }
 
-#form-message {
-    margin-top: 15px;
-    min-height: 20px;
-}
-
 .logout-btn {
-    background-color: #ff4d4d !important; /* Overriding base nav-btn color */
+    background-color: #ff4d4d !important;
     margin-top: 20px;
 }
