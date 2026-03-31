@@ -6,21 +6,19 @@
 
     <div class="settings-card">
         <h2 class="settings-title">Settings</h2>
-        
         <div class="avatar-display-section">
             <label class="upload-label">Current Avatar:</label>
-            <img src="{{ profile_pic_url }}" class="current-avatar" alt="Avatar">
+            <img th:src="${profile_pic_url}" class="current-avatar" alt="Avatar">
         </div>
-
         <div class="upload-form-section">
             <label for="pic-upload" class="upload-label">Update Profile Picture:</label>
             <input type="file" id="pic-upload" accept="image/*">
-            <button class="nav-btn" style="background-color: #4B6A89; color: white;" onclick="uploadPic()">Upload</button>
+            <button class="nav-btn upload-submit-btn" onclick="uploadPic()">Upload</button>
         </div>
     </div>
 
     <div class="status-section">
-        <p>Status: <strong>Verified</strong></p>
+        <p>Status: <strong class="verified-text">Verified</strong></p>
     </div>
 
     <div class="logout-section">

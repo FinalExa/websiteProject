@@ -146,3 +146,38 @@
 .logout-btn:hover {
     background-color: #c0392b !important;
 }
+
+#strength-meter {
+    height: 5px;
+    width: 0%;
+    transition: width 0.3s, background-color 0.3s;
+    margin-top: 5px;
+    border-radius: 2px;
+}
+
+#strength-text {
+    font-size: 0.8rem;
+    display: block;
+    margin-top: 3px;
+}
+
+.auth-switch-text {
+    margin-top: 15px;
+    font-size: 1.1rem;
+    text-align: center;
+}
+
+.auth-switch-text a {
+    color: #3498db;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.auth-switch-text a:hover {
+    text-decoration: underline;
+}
+
+.verified-text {
+    color: #27ae60;
+    font-weight: bold;
+}

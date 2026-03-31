@@ -1,4 +1,38 @@
-.env
-project.db
-__pycache__/
-static/img/profile_pictures/
+### Java/Maven ###
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.restore
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+gen/
+
+### Database (Crucial!) ###
+# We don't want to upload your local SQLite DB with user data
+*.db
+*.db-journal
+
+### Operating System ###
+.DS_Store
+Thumbs.db
+desktop.ini
+
+### Log Files ###
+*.log
+logs/
+
+### Profile Pictures (Optional) ###
+# If you want to keep the folder structure but not the actual uploaded images:
+src/main/resources/static/img/profile_pictures/*
+!src/main/resources/static/img/profile_pictures/.gitkeep
