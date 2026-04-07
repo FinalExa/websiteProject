@@ -47,10 +47,13 @@ function attachLoginListener() {
 
             const result = await response.json();
 
-			if (response.ok) {
-				showToast("Welcome back!", "success");
-				setTimeout(() => { navigateTo('user'); }, 1000);
-			} else {
+            if (response.ok) {
+                showToast("Welcome back!", "success");
+                if (typeof updateNavigation === 'function') {
+                    await updateNavigation();
+                }
+                setTimeout(() => { navigateTo('user_center'); }, 1000);
+            } else {
 				showToast(result.message, "error");
 			}
         } catch (error) {
@@ -63,11 +66,13 @@ function attachLoginListener() {
 async function handleLogout() {
     try {
         const response = await fetch('/api/logout', { method: 'POST' });
-        
+
         if (response.ok) {
             showToast("Logged out successfully", 'success');
-            
-            navigateTo('user');
+            if (typeof updateNavigation === 'function') {
+                updateNavigation();
+            }
+            navigateTo('user'); // Go back to login view
         } else {
             showToast("Logout failed. Please try again.", 'error');
         }

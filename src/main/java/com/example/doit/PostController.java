@@ -85,4 +85,29 @@ public class PostController {
             return ResponseEntity.ok(Map.of("status", "success", "message", "Post deleted successfully!"));
         }).orElse(ResponseEntity.status(404).body(Map.of("status", "error", "message", "Post not found")));
     }
+
+    @GetMapping("/posts/user/{username}")
+    public ResponseEntity<?> getUserPosts(@PathVariable String username) {
+        return userRepository.findByUsername(username).map(user -> {
+            List<Post> posts = postRepository.findByAuthorOrderByDatePostedDesc(user);
+
+            List<Map<String, Object>> postsFormatted = posts.stream()
+                    .map(post -> {
+                        String pic = user.getProfilePicPath() != null ? user.getProfilePicPath() : "img/default-avatar.png";
+                        String cacheBuster = "?v=" + System.currentTimeMillis();
+
+                        return Map.<String, Object>of(
+                                "id", post.getId(),
+                                "username", user.getUsername(),
+                                "content", post.getContent(),
+                                "date", post.getDatePosted().toString().replace("T", " ").substring(0, 16),
+                                "profile_pic", "/" + pic + cacheBuster
+                        );
+                    })
+                    .collect(Collectors.toList());
+
+            // 3. Return the formatted list
+            return ResponseEntity.ok(postsFormatted);
+        }).orElse(ResponseEntity.notFound().build());
+    }
 }

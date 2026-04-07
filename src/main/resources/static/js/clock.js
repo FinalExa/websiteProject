@@ -19,8 +19,6 @@ setInterval(updateClock, 1000);
 async function getBackendMessage() {
     const response = await fetch('/api/data');
     const data = await response.json();
-    console.log("Message from Python:", data.message);
-    // You could inject data.message into your .main-text div here!
 }
 
 getBackendMessage();

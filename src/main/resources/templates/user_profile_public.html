@@ -1,0 +1,18 @@
+<div class="public-profile-container">
+    <div class="profile-banner">
+        <div class="banner-content">
+            <img th:src="${target_user_pic}" class="banner-avatar" alt="User Avatar">
+            <div class="banner-info">
+                <h1 th:text="${target_username}" id="profile-username-header">Username</h1>
+            </div>
+        </div>
+    </div>
+
+    <div class="public-profile-container">
+        <div class="profile-posts-section">
+            <h3>Recent Posts</h3>
+            <hr>
+            <div id="user-posts-container"></div>
+        </div>
+    </div>
+</div>

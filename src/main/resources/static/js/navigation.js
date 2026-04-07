@@ -1,95 +1,97 @@
+async function updateNavigation(forceData = null) {
+    try {
+        const data = forceData || await (await fetch('/api/check-auth')).json();
+        const loggedInNav = document.getElementById('logged-in-nav');
+        const userBtn = document.getElementById('btn-user');
+        const isUserCenter = window.location.pathname === '/user_center';
+
+
+        if (data.is_logged_in) {
+            if (loggedInNav) loggedInNav.style.display = 'block'; // Show My Profile
+            if (userBtn) userBtn.innerText = "User Center";
+        } else {
+            if (loggedInNav) loggedInNav.style.display = 'none'; // Hide My Profile
+            if (userBtn) userBtn.innerText = "Login";
+        }
+    } catch (error) {
+        console.error("Auth check failed", error);
+    }
+}
+
+
+
 async function navigateTo(pageName) {
     const main = document.getElementById('main-content');
-    
+    if (!main) return;
+
     const authCheck = await fetch('/api/check-auth');
     const auth = await authCheck.json();
 
-    if (!auth.is_logged_in && pageName !== 'user') {
-        window.history.replaceState({ page: 'user' }, "", "/user");
-        pageName = 'user'; 
+    if (pageName === 'user_center' && !auth.is_logged_in) {
+        pageName = 'user';
     }
 
-    updateNavVisibility(auth.is_logged_in, pageName);
-	
-    if (auth.is_logged_in && pageName === 'user') {
-        const response = await fetch('/api/content/personal-area');
-        main.innerHTML = await response.text();
-        
-        if (window.location.pathname !== '/user') {
-            window.history.pushState({ page: 'user' }, "", "/user");
-        }
-
-        const userDisplay = document.getElementById('display-username');
-        if (userDisplay) userDisplay.innerText = auth.user;
-        return;
-    }
-	
-    const apiPath = `/api/content/${pageName}`;
     const displayPath = `/${pageName}`;
-
     if (window.location.pathname !== displayPath) {
         window.history.pushState({ page: pageName }, "", displayPath);
     }
 
     try {
-        const response = await fetch(`/api/content/${pageName}`);
-        
-        if (response.status === 401) {
-            navigateTo('user');
-            return;
-        }
+        if (pageName.startsWith('profile/')) {
+            const username = pageName.split('/')[1];
+            const response = await fetch(`/api/public-profile/${username}`);
+            if (!response.ok) throw new Error('Profile not found');
+            main.innerHTML = await response.text();
 
-        if (!response.ok) throw new Error('Page not found');
-        const html = await response.text();
-        main.innerHTML = html;
-        
-        if (pageName === 'home') {
-            if (typeof updateClock === "function") updateClock();
-            if (typeof loadPosts === "function") loadPosts(); 
+            if (typeof userPosts === 'function') {
+                userPosts(username);
+            }
         }
-        
-        if (pageName === 'user' && !auth.is_logged_in) {
-            loadLoginView(); 
+        else if (pageName === 'user_center') {
+            const response = await fetch('/api/content/personal-area');
+            main.innerHTML = await response.text();
+        }
+        else {
+            const response = await fetch(`/api/content/${pageName}`);
+            if (!response.ok) throw new Error('Page not found');
+            main.innerHTML = await response.text();
+
+            if (pageName === 'home' && typeof loadPosts === "function") loadPosts();
+            if (pageName === 'user' && !auth.is_logged_in && typeof loadLoginView === "function") loadLoginView();
         }
     } catch (error) {
         console.error('Navigation error:', error);
     }
+
+    await updateNavigation(auth);
 }
 
-document.getElementById('btn-user').addEventListener('click', async () => {
-    const authCheck = await fetch('/api/check-auth');
-    const auth = await authCheck.json();
-
-    if (!auth.is_logged_in) {
-        navigateTo('user');
-    } else {
-        const isCurrentlyOnAccount = window.location.pathname.includes('user');
-        if (isCurrentlyOnAccount) {
-            navigateTo('home');
-        } else {
-            navigateTo('user');
-        }
-    }
+document.getElementById('btn-user').addEventListener('click', () => {
+    navigateTo('user_center');
 });
 
 window.addEventListener('popstate', () => {
-    const page = window.location.pathname.replace('/', '') || 'home';
+    const path = window.location.pathname.startsWith('/') ? window.location.pathname.substring(1) : window.location.pathname;
+    const page = path || 'home';
     navigateTo(page);
 });
 
 window.addEventListener('DOMContentLoaded', () => {
-    const initialPage = window.location.pathname.replace('/', '') || 'home';
+    const path = window.location.pathname.startsWith('/') ? window.location.pathname.substring(1) : window.location.pathname;
+    const initialPage = path || 'home';
     navigateTo(initialPage);
 });
 
-function updateNavVisibility(isLoggedIn, currentPage) {
-    const userBtn = document.getElementById('btn-user');
-    if (!userBtn) return;
-
-    if (!isLoggedIn) {
-        userBtn.innerText = "Login";
-    } else {
-        const onAccount = currentPage ? (currentPage === 'user') : window.location.pathname.includes('user');
-        userBtn.innerText = onAccount ? "Back to Feed" : "My Account";
+async function goToMyPublicProfile() {
+    try {
+        const response = await fetch('/api/check-auth');
+        const data = await response.json();
+        if (data.is_logged_in && data.user) {
+            navigateTo(`profile/${data.user}`);
+        } else {
+            navigateTo('user');
+        }
+    } catch (error) {
+        console.error("Error redirecting to profile:", error);
     }
 }
