@@ -138,3 +138,25 @@ main {
 .nav-section.right {
     justify-content: flex-end;
 }
+
+.post-link-target {
+    text-decoration: none;
+    transition: all 0.2s ease-in-out;
+    display: inline-block;
+}
+
+.post-link-target:hover {
+    color: #3498db !important;
+    text-decoration: underline !important;
+}
+
+.post-username-target {
+    font-weight: bold;
+    color: #2c3e50;
+    font-size: 1rem;
+}
+
+.post-link-target:hover ~ .post-img-target,
+.post-header:has(.post-link-target:hover) .post-img-target {
+    filter: brightness(1.1);
+}

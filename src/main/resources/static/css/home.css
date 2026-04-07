@@ -34,7 +34,18 @@
     margin-top: 20px;
 }
 
+.home-feed-container {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
 .post-card {
+    width: 100%;
+    box-sizing: border-box;
     text-align: left;
     margin-bottom: 10px;
     padding: 15px 25px;

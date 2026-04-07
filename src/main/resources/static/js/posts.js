@@ -1,6 +1,6 @@
 async function submitPost() {
     const content = document.getElementById('post-content').value;
-    
+
     const response = await fetch('/api/post', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -11,7 +11,7 @@ async function submitPost() {
     if (response.ok) {
         showToast(result.message, "success");
         document.getElementById('post-content').value = '';
-        loadPosts(); // Refresh the feed
+        loadPosts();
     } else {
         showToast(result.message, "error");
     }
@@ -21,42 +21,43 @@ async function loadPosts() {
     const container = document.getElementById('posts-container');
     if (!container) return;
 
-    // Get current auth status to know who is viewing
-    const authCheck = await fetch('/api/check-auth');
-    const auth = await authCheck.json();
+    try {
+        const response = await fetch('/api/posts');
+        const posts = await response.json();
 
-    const response = await fetch('/api/posts');
-    const posts = await response.json();
+        const templateReq = await fetch('/api/content/post-item');
+        if (!templateReq.ok) throw new Error("Template fetch failed");
+        const templateHtml = await templateReq.text();
 
-    container.innerHTML = posts.map(post => {
-		return `
-			<div class="main-text post-card">
-				<div class="post-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-					<img src="${post.profile_pic}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
-					<div>
-						<span class="post-author" style="font-weight: bold;">@${post.username}</span>
-						<span class="post-date" style="font-size: 0.8rem; color: gray;">${post.date}</span>
-					</div>
-				</div>
-				<p>${post.content}</p>
-			</div>
-		`;
-	}).join('');
-}
+        container.innerHTML = '';
 
-async function deletePost(postId) {
-    if (!confirm("Are you sure you want to delete this post?")) return;
+        if (posts.length === 0) {
+            container.innerHTML = '<p>No posts available.</p>';
+            return;
+        }
 
-    const response = await fetch(`/api/delete-post/${postId}`, {
-        method: 'DELETE'
-    });
+        for (const post of posts) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = templateHtml;
 
-    const result = await response.json();
-    if (response.ok) {
-        showToast(result.message, "success");
-        loadPosts();
-    } else {
-        showToast(result.message, "error");
+            tempDiv.querySelector('.post-img-target').src = post.profile_pic;
+
+            const link = tempDiv.querySelector('.post-link-target');
+            link.href = `/profile/${post.username}`;
+            link.onclick = (e) => {
+                e.preventDefault();
+                navigateTo(`profile/${post.username}`);
+            };
+
+            tempDiv.querySelector('.post-username-target').innerText = `@${post.username}`;
+
+            tempDiv.querySelector('.post-date-target').innerText = post.date;
+            tempDiv.querySelector('.post-text-target').innerText = post.content;
+
+            container.appendChild(tempDiv.firstElementChild);
+        }
+    } catch (error) {
+        console.error("Error loading feed:", error);
     }
 }
 
@@ -69,12 +70,11 @@ async function userPosts(username) {
     }
 
     try {
-
-        const response = await fetch(`/api/posts/user/${username}`); //
+        const response = await fetch(`/api/posts/user/${username}`);
         if (!response.ok) return;
 
         const posts = await response.json();
-        const templateReq = await fetch('/api/content/post-item'); //
+        const templateReq = await fetch('/api/content/post-item');
         const templateHtml = await templateReq.text();
 
         container.innerHTML = '';
@@ -89,13 +89,22 @@ async function userPosts(username) {
             tempDiv.innerHTML = templateHtml;
 
             tempDiv.querySelector('.post-img-target').src = post.profile_pic;
-            tempDiv.querySelector('.post-username-target').innerText = post.username;
+
+            const link = tempDiv.querySelector('.post-link-target');
+            link.href = `/profile/${post.username}`;
+            link.onclick = (e) => {
+                e.preventDefault();
+                navigateTo(`profile/${post.username}`);
+            };
+
+            tempDiv.querySelector('.post-username-target').innerText = `@${post.username}`;
+
             tempDiv.querySelector('.post-date-target').innerText = post.date;
             tempDiv.querySelector('.post-text-target').innerText = post.content;
 
             container.appendChild(tempDiv.firstElementChild);
         }
-    } catch (e) {
-        console.error("Post loading failed:", e);
+    } catch (error) {
+        console.error("Database fetch error:", error);
     }
 }
