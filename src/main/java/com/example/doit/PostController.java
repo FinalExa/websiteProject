@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -14,10 +16,12 @@ public class PostController {
 
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final VoteRepository voteRepository;
 
-    public PostController(PostRepository postRepository, UserRepository userRepository) {
+    public PostController(PostRepository postRepository, UserRepository userRepository, VoteRepository voteRepository) {
         this.postRepository = postRepository;
         this.userRepository = userRepository;
+        this.voteRepository = voteRepository;
     }
 
     @GetMapping("/posts")
@@ -27,21 +31,25 @@ public class PostController {
         }
 
         List<Map<String, Object>> posts = postRepository.findAllByOrderByDatePostedDesc().stream()
-                .map(post -> {
-                    User author = post.getAuthor();
-                    String pic = author.getProfilePicPath() != null ? author.getProfilePicPath() : "img/default-avatar.png";
-
-                    return Map.<String, Object>of(
-                            "id", post.getId(),
-                            "username", author.getUsername(),
-                            "content", post.getContent(),
-                            "date", post.getDatePosted().toString(),
-                            "profile_pic", "/" + pic + "?v=" + System.currentTimeMillis() // Add this here too!
-                    );
-                })
+                .map(this::formatPost)
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(posts);
+    }
+
+    private Map<String, Object> formatPost(Post post) {
+        User author = post.getAuthor();
+        String pic = author.getProfilePicPath() != null ? author.getProfilePicPath() : "img/default-avatar.png";
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", post.getId());
+        map.put("username", author.getUsername());
+        map.put("content", post.getContent());
+        map.put("date", post.getDatePosted().toString());
+        map.put("upvotes", post.getUpvoteCount());
+        map.put("downvotes", post.getDownvoteCount());
+        map.put("profile_pic", "/" + pic + "?v=" + System.currentTimeMillis());
+        return map;
     }
 
     @PostMapping("/post")
@@ -70,6 +78,47 @@ public class PostController {
         }).orElse(ResponseEntity.status(404).body(Map.of("status", "error", "message", "User not found")));
     }
 
+    @PostMapping("/posts/{id}/vote")
+    public ResponseEntity<?> handleVote(@PathVariable Long id, @RequestParam String type, HttpSession session) {
+        String username = (String) session.getAttribute("user");
+        if (username == null) {
+            return ResponseEntity.status(401).body(Map.of("status", "error", "message", "Login required"));
+        }
+
+        Post post = postRepository.findById(id).orElse(null);
+        User user = userRepository.findByUsername(username).orElse(null);
+
+        if (post == null || user == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Optional<Vote> existingVote = voteRepository.findByPostAndUser(post, user);
+
+        if (existingVote.isPresent()) {
+            Vote vote = existingVote.get();
+            if (vote.getType().equalsIgnoreCase(type)) {
+                voteRepository.delete(vote);
+            } else {
+                vote.setType(type.toUpperCase());
+                voteRepository.save(vote);
+            }
+        } else {
+            Vote newVote = new Vote();
+            newVote.setPost(post);
+            newVote.setUser(user);
+            newVote.setType(type.toUpperCase());
+            voteRepository.save(newVote);
+        }
+
+        postRepository.flush();
+        Post updatedPost = postRepository.findById(id).orElse(post);
+
+        return ResponseEntity.ok(Map.of(
+                "upvotes", updatedPost.getUpvoteCount(),
+                "downvotes", updatedPost.getDownvoteCount()
+        ));
+    }
+
     @DeleteMapping("/delete-post/{id}")
     public ResponseEntity<?> deletePost(@PathVariable Long id, HttpSession session) {
         String username = (String) session.getAttribute("user");
@@ -89,25 +138,10 @@ public class PostController {
     @GetMapping("/posts/user/{username}")
     public ResponseEntity<?> getUserPosts(@PathVariable String username) {
         return userRepository.findByUsername(username).map(user -> {
-            List<Post> posts = postRepository.findByAuthorOrderByDatePostedDesc(user);
-
-            List<Map<String, Object>> postsFormatted = posts.stream()
-                    .map(post -> {
-                        String pic = user.getProfilePicPath() != null ? user.getProfilePicPath() : "img/default-avatar.png";
-                        String cacheBuster = "?v=" + System.currentTimeMillis();
-
-                        return Map.<String, Object>of(
-                                "id", post.getId(),
-                                "username", user.getUsername(),
-                                "content", post.getContent(),
-                                "date", post.getDatePosted().toString().replace("T", " ").substring(0, 16),
-                                "profile_pic", "/" + pic + cacheBuster
-                        );
-                    })
+            List<Map<String, Object>> posts = postRepository.findByAuthorOrderByDatePostedDesc(user).stream()
+                    .map(this::formatPost)
                     .collect(Collectors.toList());
-
-            // 3. Return the formatted list
-            return ResponseEntity.ok(postsFormatted);
+            return ResponseEntity.ok(posts);
         }).orElse(ResponseEntity.notFound().build());
     }
 }

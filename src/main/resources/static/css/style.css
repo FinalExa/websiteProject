@@ -160,3 +160,17 @@ main {
 .post-header:has(.post-link-target:hover) .post-img-target {
     filter: brightness(1.1);
 }
+
+.vote-btn {
+    transition: transform 0.1s ease;
+    padding: 5px;
+    border-radius: 4px;
+}
+
+.vote-btn:hover {
+    background-color: #f0f2f5;
+    transform: scale(1.2);
+}
+
+.upvote-btn:hover { color: #27ae60; }
+.downvote-btn:hover { color: #e74c3c; }
