@@ -1,0 +1,43 @@
+.comment-item {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+    align-items: flex-start;
+}
+
+/* Profile Picture */
+.comment-avatar-target {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: #ddd;
+}
+
+.comment-content {
+    background-color: #f0f2f5;
+    padding: 8px 12px;
+    border-radius: 15px;
+    max-width: 80%;
+}
+
+.comment-username-target {
+    font-weight: bold;
+    font-size: 0.85rem;
+    color: #2c3e50;
+    margin-bottom: 2px;
+}
+
+.comment-text-target {
+    font-size: 0.9rem;
+    color: #333;
+    word-break: break-word;
+    line-height: 1.4;
+}
+
+.no-comments-msg {
+    font-size: 0.8rem;
+    color: #888;
+    text-align: center;
+    padding: 15px;
+}

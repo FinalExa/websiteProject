@@ -6,8 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "user_post")
-public class Post {
+@Table(name = "post_comments")
+public class Comment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,13 +22,9 @@ public class Post {
     @JoinColumn(name = "user_username", nullable = false)
     private User author;
 
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Vote> votes = new ArrayList<>();
-
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Comment> comments = new ArrayList<>();
-
-    public List<Comment> getComments() { return comments; }
+    @ManyToOne
+    @JoinColumn(name = "post_id", nullable = false)
+    private Post post;
 
     public Long getId() { return id; }
     public String getContent() { return content; }
@@ -36,16 +32,5 @@ public class Post {
     public LocalDateTime getDatePosted() { return datePosted; }
     public User getAuthor() { return author; }
     public void setAuthor(User author) { this.author = author; }
-
-    public long getUpvoteCount() {
-        return votes.stream().filter(v -> "UPVOTE".equals(v.getType())).count();
-    }
-
-    public long getDownvoteCount() {
-        return votes.stream().filter(v -> "DOWNVOTE".equals(v.getType())).count();
-    }
-
-    public List<Vote> getVotes() {
-        return votes;
-    }
+    public void setPost(Post post) { this.post = post; }
 }
