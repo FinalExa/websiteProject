@@ -17,8 +17,10 @@ async function uploadPic() {
         const result = await response.json();
         if (response.ok) {
             showToast(result.message, "success");
-            // Optional: Reload the page to see the new picture
-            setTimeout(() => location.reload(), 1500);
+            const currentAvatar = document.querySelector('.current-avatar');
+            if (currentAvatar && result.newPath) {
+                currentAvatar.src = result.newPath + '?t=' + new Date().getTime();
+            }
         } else {
             showToast(result.message, "error");
         }

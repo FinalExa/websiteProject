@@ -8,7 +8,7 @@ import java.util.List;
 public interface PostRepository extends JpaRepository<Post, Long> {
 
     // Add this line to fix the "cannot find symbol" error
-    List<Post> findByAuthorOrderByDatePostedDesc(User author);
+    List<Post> findByAuthorUsernameOrderByDatePostedDesc(String username);
 
     // This is your existing method for the main feed
     List<Post> findAllByOrderByDatePostedDesc();

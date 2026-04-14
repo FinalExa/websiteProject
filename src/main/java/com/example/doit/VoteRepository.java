@@ -5,4 +5,9 @@ import java.util.Optional;
 
 public interface VoteRepository extends JpaRepository<Vote, Long> {
     Optional<Vote> findByPostAndUserUsername(Post post, String username);
+
+    Optional<Vote> findByPostAndUser(Post post, User user);
+
+    // This will now compile
+    long countByPostAndType(Post post, String type);
 }

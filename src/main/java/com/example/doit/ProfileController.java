@@ -43,14 +43,30 @@ public class ProfileController {
             Files.copy(file.getInputStream(), newFilePath, StandardCopyOption.REPLACE_EXISTING);
 
             User user = userRepository.findByUsername(username).orElseThrow();
+            // Store path relative to static folder
             String dbPath = "img/profile_pictures/" + username + "/0.png";
             user.setProfilePicPath(dbPath);
             userRepository.save(user);
 
-            return ResponseEntity.ok(Map.of("status", "success", "message", "Profile picture updated!"));
+            return ResponseEntity.ok(Map.of("status", "success", "message", "Profile picture updated!", "newPath", "/" + dbPath));
 
         } catch (IOException e) {
             return ResponseEntity.status(500).body(Map.of("status", "error", "message", "Upload failed: " + e.getMessage()));
         }
+    }
+
+    @GetMapping("/data")
+    public ResponseEntity<?> getUserData(HttpSession session) {
+        String username = (String) session.getAttribute("user");
+        if (username == null) return ResponseEntity.status(401).build();
+
+        return userRepository.findByUsername(username).map(user -> {
+            String pic = user.getProfilePicPath() != null ? user.getProfilePicPath() : "img/default-avatar.png";
+            return ResponseEntity.ok(Map.of(
+                    "user", user.getUsername(),
+                    "profile_pic", "/" + pic,
+                    "is_logged_in", true
+            ));
+        }).orElse(ResponseEntity.notFound().build());
     }
 }

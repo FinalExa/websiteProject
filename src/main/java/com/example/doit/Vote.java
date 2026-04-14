@@ -7,6 +7,13 @@ import jakarta.persistence.*;
         @UniqueConstraint(columnNames = {"post_id", "user_username"})
 })
 public class Vote {
+
+    // Define this so the Repository and Controller can use it
+    public enum VoteType {
+        UPVOTE,
+        DOWNVOTE
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -27,5 +34,7 @@ public class Vote {
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
     public String getType() { return type; }
+
+    public void setType(VoteType type) { this.type = type.toString(); }
     public void setType(String type) { this.type = type; }
 }

@@ -18,7 +18,6 @@ async function loadComments(postId, container) {
             fetch(`/api/posts/${postId}/comments`, {
                 headers: { 'Accept': 'application/json' }
             }),
-            // Method 2: Calling the Controller endpoint, NOT the file path
             fetch('/api/content/comment-item')
         ]);
 
@@ -38,10 +37,11 @@ async function loadComments(postId, container) {
                 tempDiv.innerHTML = templateHtml;
                 const commentEl = tempDiv.firstElementChild;
 
-                // Targeting the classes defined in your comment_item.html
                 commentEl.querySelector('.comment-avatar-target').src = c.profile_pic;
                 commentEl.querySelector('.comment-username-target').innerText = `@${c.username}`;
                 commentEl.querySelector('.comment-text-target').innerText = c.content;
+
+                commentEl.querySelector('.comment-link-target').href = `/profile/${c.username}`;
 
                 container.appendChild(commentEl);
             });
@@ -58,7 +58,7 @@ async function submitComment(btn) {
     const input = postCard.querySelector('.comment-input');
     const postId = postCard.dataset.postId;
     const container = postCard.querySelector('.comments-container');
-    const countSpan = postCard.querySelector('.comment-count-target');
+    const countSpan = postCard.querySelector('.comment-count-target'); // This targets the "0 Comments" text
 
     if (!input.value.trim()) return;
 
@@ -74,10 +74,11 @@ async function submitComment(btn) {
 
         if (response.ok) {
             input.value = '';
-            // Refresh list after posting
             await loadComments(postId, container);
+
             if (countSpan) {
-                countSpan.innerText = parseInt(countSpan.innerText) + 1;
+                let currentCount = parseInt(countSpan.innerText) || 0;
+                countSpan.innerText = currentCount + 1;
             }
         }
     } catch (error) {

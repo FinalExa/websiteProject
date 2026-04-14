@@ -1,24 +1,32 @@
-.comment-item {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 12px;
-    align-items: flex-start;
+.comments-container {
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    margin-top: 10px;
 }
 
-/* Profile Picture */
+.comment-item {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    align-items: flex-start;
+    transition: transform 0.2s ease;
+}
+
 .comment-avatar-target {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     object-fit: cover;
-    background-color: #ddd;
+    border: 1px solid #ddd;
+    flex-shrink: 0;
 }
 
 .comment-content {
     background-color: #f0f2f5;
-    padding: 8px 12px;
-    border-radius: 15px;
-    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 18px;
+    max-width: 85%;
+    position: relative;
 }
 
 .comment-username-target {
@@ -28,16 +36,61 @@
     margin-bottom: 2px;
 }
 
+.comment-content:hover {
+    background-color: #e4e6e9;
+}
+
+.comment-username-target {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #1c1e21;
+    margin-bottom: 2px;
+    display: block;
+}
+
 .comment-text-target {
-    font-size: 0.9rem;
-    color: #333;
+    font-size: 0.95rem;
+    color: #050505;
     word-break: break-word;
     line-height: 1.4;
 }
 
 .no-comments-msg {
-    font-size: 0.8rem;
+    font-style: italic;
     color: #888;
     text-align: center;
-    padding: 15px;
+    padding: 20px;
+    font-size: 0.9rem;
+}
+
+.comment-input {
+    flex-grow: 1;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    padding: 8px 15px;
+    outline: none;
+    font-size: 0.9rem;
+}
+
+.comment-input:focus {
+    border-color: #1877f2;
+    background-color: #fff;
+}
+
+.comment-link-target {
+    text-decoration: none;
+    display: inline-block;
+}
+
+.comment-link-target:hover .comment-username-target {
+    text-decoration: underline;
+    color: #1877f2;
+}
+
+.comment-username-target {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #1c1e21;
+    margin-bottom: 2px;
+    display: block;
 }

@@ -39,6 +39,7 @@ public class WebController {
             case "post-item" -> "post_item";
             case "login-view" -> "login_content";
             case "register-view" -> "register_content";
+            case "personal_area_content" -> "personal_area_content";
             default -> "error/404";
         };
     }

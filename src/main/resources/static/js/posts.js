@@ -1,79 +1,72 @@
-async function submitPost() {
-    const content = document.getElementById('post-content').value;
-    const response = await fetch('/api/post', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content })
-    });
-    const result = await response.json();
-    if (response.ok) {
-        showToast(result.message, "success");
-        document.getElementById('post-content').value = '';
-        loadPosts();
-    } else {
-        showToast(result.message, "error");
+async function loadPosts(targetUsername = null) {
+    const container = document.getElementById('posts-container') || document.getElementById('user-posts-container');
+
+    if (!container) {
+        setTimeout(() => loadPosts(targetUsername), 50);
+        return;
     }
-}
 
-async function loadPosts() {
-    const container = document.getElementById('posts-container');
-    if (!container) return;
     try {
-        const response = await fetch('/api/posts');
-        const posts = await response.json();
-        if (!Array.isArray(posts)) {
-            container.innerHTML = `<p style="color: red;">${posts.message || "Session expired."}</p>`;
-            return;
-        }
-        const templateReq = await fetch('/api/content/post-item');
-        const templateHtml = await templateReq.text();
-        container.innerHTML = '';
+        const url = targetUsername ? `/api/posts/user/${targetUsername}` : '/api/posts';
+        const [response, templateReq] = await Promise.all([
+            fetch(url),
+            fetch('/api/content/post-item')
+        ]);
 
-        for (const post of posts) {
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = templateHtml;
+        if (response.ok && templateReq.ok) {
+            const posts = await response.json();
+            const templateHtml = await templateReq.text();
+            container.innerHTML = '';
 
-            const postEl = tempDiv.firstElementChild;
-            // CRITICAL: Link the HTML element to the database ID for comments
-            postEl.dataset.postId = post.id;
+            const nameHeader = document.getElementById('profile-username-header');
+            const picHeader = document.getElementById('profile-avatar-header');
 
-            postEl.querySelector('.post-img-target').src = post.profile_pic;
-            const link = postEl.querySelector('.post-link-target');
-            link.href = `/profile/${post.username}`;
-            link.onclick = (e) => {
-                e.preventDefault();
-                navigateTo(`profile/${post.username}`);
-            };
-
-            postEl.querySelector('.post-username-target').innerText = `@${post.username}`;
-            postEl.querySelector('.post-date-target').innerText = post.date;
-            postEl.querySelector('.post-text-target').innerText = post.content;
-
-            const commentCountSpan = postEl.querySelector('.comment-count-target');
-            if (commentCountSpan) {
-                commentCountSpan.innerText = post.commentCount || 0;
+            if (targetUsername && nameHeader) {
+                nameHeader.innerText = `@${targetUsername}`;
+                if (posts.length > 0 && picHeader) {
+                    picHeader.src = posts[0].profile_pic;
+                }
             }
 
-            const upSpan = postEl.querySelector('.upvote-count-target');
-            const downSpan = postEl.querySelector('.downvote-count-target');
-            const upBtn = postEl.querySelector('.upvote-btn');
-            const downBtn = postEl.querySelector('.downvote-btn');
+            if (posts.length === 0) {
+                container.innerHTML = '<p class="no-posts-msg">No posts to show yet.</p>';
+                return;
+            }
 
-            if (upSpan && downSpan) {
+            for (const post of posts) {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = templateHtml;
+                const postEl = tempDiv.firstElementChild;
+
+                postEl.dataset.postId = post.id;
+                postEl.querySelector('.post-img-target').src = post.profile_pic;
+                postEl.querySelector('.post-username-target').innerText = `@${post.username}`;
+                postEl.querySelector('.post-link-target').href = `/profile/${post.username}`;
+                postEl.querySelector('.post-text-target').innerText = post.content;
+                postEl.querySelector('.post-date-target').innerText = new Date(post.date).toLocaleString();
+
+                const countSpan = postEl.querySelector('.comment-count-target');
+                if (countSpan) countSpan.innerText = post.commentCount || 0;
+
+                const upSpan = postEl.querySelector('.upvote-count-target');
+                const downSpan = postEl.querySelector('.downvote-count-target');
+                const upBtn = postEl.querySelector('.upvote-btn');
+                const downBtn = postEl.querySelector('.downvote-btn');
+
                 upSpan.innerText = post.upvotes || 0;
                 downSpan.innerText = post.downvotes || 0;
 
                 if (post.user_vote === 'UPVOTE') upBtn.classList.add('upvoted');
                 if (post.user_vote === 'DOWNVOTE') downBtn.classList.add('downvoted');
 
-                upBtn.onclick = function() { handleVote(post.id, 'UPVOTE', upSpan, downSpan, this); };
-                downBtn.onclick = function() { handleVote(post.id, 'DOWNVOTE', upSpan, downSpan, this); };
-            }
+                upBtn.onclick = () => handleVote(post.id, 'UPVOTE', upSpan, downSpan, upBtn);
+                downBtn.onclick = () => handleVote(post.id, 'DOWNVOTE', upSpan, downSpan, downBtn);
 
-            container.appendChild(postEl);
+                container.appendChild(postEl);
+            }
         }
     } catch (error) {
-        console.error("Database fetch error:", error);
+        console.error("Failed to load posts:", error);
     }
 }
 
@@ -84,18 +77,9 @@ async function handleVote(postId, type, upSpan, downSpan, clickedBtn) {
             const data = await response.json();
             upSpan.innerText = data.upvotes;
             downSpan.innerText = data.downvotes;
-
             const parent = clickedBtn.parentElement;
-            const upBtn = parent.querySelector('.upvote-btn');
-            const downBtn = parent.querySelector('.downvote-btn');
-
-            upBtn.classList.remove('upvoted');
-            downBtn.classList.remove('downvoted');
-
-            if (data.user_vote === 'UPVOTE') upBtn.classList.add('upvoted');
-            if (data.user_vote === 'DOWNVOTE') downBtn.classList.add('downvoted');
+            parent.querySelector('.upvote-btn').classList.toggle('upvoted', data.user_vote === 'UPVOTE');
+            parent.querySelector('.downvote-btn').classList.toggle('downvoted', data.user_vote === 'DOWNVOTE');
         }
-    } catch (error) {
-        console.error("Vote error:", error);
-    }
+    } catch (e) { console.error("Vote failed", e); }
 }
