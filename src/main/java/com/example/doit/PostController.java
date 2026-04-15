@@ -151,4 +151,16 @@ public class PostController {
                 }).collect(Collectors.toList());
         return ResponseEntity.ok(comments);
     }
+
+    @GetMapping("/posts/{id}")
+    @ResponseBody
+    public ResponseEntity<?> getSinglePost(@PathVariable Long id, HttpSession session) {
+        String currentUser = (String) session.getAttribute("user");
+        if (currentUser == null) return ResponseEntity.status(401).build();
+
+        return postRepository.findById(id)
+                .map(post -> ResponseEntity.ok(formatPost(post, currentUser)))
+                .orElse(ResponseEntity.notFound().build());
+    }
 }
+

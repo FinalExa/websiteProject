@@ -187,7 +187,8 @@ main {
     background-color: #f6f7f8;
 }
 
-.vote-btn.upvoted {
+.vote-btn.upvoted,
+.vote-btn.upvoted i {
     color: #27ae60 !important;
 }
 
@@ -195,7 +196,8 @@ main {
     background-color: rgba(39, 174, 96, 0.1);
 }
 
-.vote-btn.downvoted {
+.vote-btn.downvoted,
+.vote-btn.downvoted i {
     color: #e74c3c !important;
 }
 

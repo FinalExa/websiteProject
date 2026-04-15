@@ -23,6 +23,7 @@ async function navigateTo(pageName) {
     const authCheck = await fetch('/api/check-auth');
     const auth = await authCheck.json();
 
+    // Redirect to login if trying to access user_center while logged out
     if (pageName === 'user_center' && !auth.is_logged_in) {
         pageName = 'user';
     }
@@ -35,12 +36,17 @@ async function navigateTo(pageName) {
     try {
         let contentUrl;
         let profileUser = null;
+        let postId = null;
 
+        // Routing Logic
         if (pageName === 'user_center') {
             contentUrl = `/api/content/personal_area_content`;
         } else if (pageName.startsWith('profile/')) {
             profileUser = pageName.split('/')[1];
             contentUrl = `/api/content/user_profile_public`;
+        } else if (pageName.startsWith('post/')) {
+            postId = pageName.split('/')[1];
+            contentUrl = `/api/content/post_view`;
         } else {
             contentUrl = `/api/content/${pageName}`;
         }
@@ -49,7 +55,9 @@ async function navigateTo(pageName) {
         if (!response.ok) throw new Error('Page not found');
         main.innerHTML = await response.text();
 
-        if (profileUser) {
+        if (postId) {
+            loadSinglePost(postId);
+        } else if (profileUser) {
             loadPosts(profileUser);
         } else if (pageName === 'home') {
             loadPosts();
@@ -58,6 +66,7 @@ async function navigateTo(pageName) {
         } else if (pageName === 'user_center') {
             const userDisplay = document.getElementById('display-username');
             if (userDisplay) userDisplay.innerText = auth.user;
+
             try {
                 const dataResponse = await fetch('/api/data');
                 if (dataResponse.ok) {

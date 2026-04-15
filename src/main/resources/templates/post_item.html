@@ -1,4 +1,4 @@
-<div class="post-card">
+<div class="post-card" id="post-card-template" style="cursor: pointer;">
     <div class="post-header">
         <img src="" class="post-avatar-small post-img-target">
         <div class="post-meta">
@@ -11,26 +11,25 @@
     <div class="post-content post-text-target"></div>
 
     <div class="post-actions">
-        <button class="vote-btn upvote-btn">
+        <button class="vote-btn upvote-btn" onclick="event.stopPropagation()">
             <i class="fas fa-arrow-up"></i>
             <span class="upvote-count-target">0</span>
         </button>
-        <button class="vote-btn downvote-btn">
+        <button class="vote-btn downvote-btn" onclick="event.stopPropagation()">
             <i class="fas fa-arrow-down"></i>
             <span class="downvote-count-target">0</span>
         </button>
-        <button class="comment-toggle-btn" onclick="toggleComments(this)">
+        <button class="comment-toggle-btn" onclick="event.stopPropagation(); toggleComments(this)">
             <i class="fas fa-comment"></i>
             <span class="comment-count-target">0</span> Comments
         </button>
     </div>
 
-    <div class="comments-section" style="display: none;">
+    <div class="comments-section" style="display: none;" onclick="event.stopPropagation()">
         <div class="comment-input-area">
             <input type="text" class="comment-input" placeholder="Write a comment...">
-            <button class="nav-btn" onclick="submitComment(this)">Post</button>
+            <button class="comment-submit-btn" onclick="submitComment(this)">Post</button>
         </div>
-        <div class="comments-container">
-        </div>
+        <div class="comments-container"></div>
     </div>
 </div>

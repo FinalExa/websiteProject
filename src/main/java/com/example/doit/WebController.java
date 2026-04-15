@@ -15,9 +15,14 @@ public class WebController {
         this.userRepository = userRepository;
     }
 
-    @GetMapping({"/", "/home", "/user", "/user_center", "/profile/{username}"})
+    @GetMapping({"/", "/home", "/user", "/user_center", "/profile/{username}", "/post/{id}"})
     public String index() {
         return "index";
+    }
+
+    @GetMapping("/api/content/post_view")
+    public String getPostViewTemplate() {
+        return "post_view";
     }
 
     @GetMapping("/api/content/personal-area")

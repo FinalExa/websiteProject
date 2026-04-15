@@ -6,18 +6,20 @@ async function toggleComments(btn) {
 
     if (section.style.display === 'none' || section.style.display === '') {
         section.style.display = 'block';
-        await loadComments(postId, container);
+        if (postId && container) {
+            await loadComments(postId, container);
+        }
     } else {
         section.style.display = 'none';
     }
 }
 
 async function loadComments(postId, container) {
+    if (!postId || postId === "undefined" || !container) return;
+
     try {
         const [response, templateReq] = await Promise.all([
-            fetch(`/api/posts/${postId}/comments`, {
-                headers: { 'Accept': 'application/json' }
-            }),
+            fetch(`/api/posts/${postId}/comments`),
             fetch('/api/content/comment-item')
         ]);
 
@@ -37,16 +39,20 @@ async function loadComments(postId, container) {
                 tempDiv.innerHTML = templateHtml;
                 const commentEl = tempDiv.firstElementChild;
 
-                commentEl.querySelector('.comment-avatar-target').src = c.profile_pic;
-                commentEl.querySelector('.comment-username-target').innerText = `@${c.username}`;
-                commentEl.querySelector('.comment-text-target').innerText = c.content;
+                const img = commentEl.querySelector('.comment-img-target');
+                if (img) img.src = c.profile_pic || '/img/default-avatar.png';
 
-                commentEl.querySelector('.comment-link-target').href = `/profile/${c.username}`;
+                const user = commentEl.querySelector('.comment-username-target');
+                if (user) user.innerText = c.username;
+
+                const text = commentEl.querySelector('.comment-text-target');
+                if (text) text.innerText = c.content;
+
+                const link = commentEl.querySelector('.comment-link-target');
+                if (link) link.href = `javascript:navigateTo('profile/${c.username}')`;
 
                 container.appendChild(commentEl);
             });
-        } else {
-            console.error(`Error: Data Status ${response.status}, Template Status ${templateReq.status}`);
         }
     } catch (error) {
         console.error("Error loading comments:", error);
@@ -58,30 +64,26 @@ async function submitComment(btn) {
     const input = postCard.querySelector('.comment-input');
     const postId = postCard.dataset.postId;
     const container = postCard.querySelector('.comments-container');
-    const countSpan = postCard.querySelector('.comment-count-target'); // This targets the "0 Comments" text
+    const countSpan = postCard.querySelector('.comment-count-target');
 
-    if (!input.value.trim()) return;
+    if (!input.value.trim() || !postId) return;
 
     try {
         const response = await fetch(`/api/posts/${postId}/comment`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ content: input.value })
         });
 
         if (response.ok) {
             input.value = '';
             await loadComments(postId, container);
-
             if (countSpan) {
-                let currentCount = parseInt(countSpan.innerText) || 0;
-                countSpan.innerText = currentCount + 1;
+                let current = parseInt(countSpan.innerText) || 0;
+                countSpan.innerText = current + 1;
             }
         }
     } catch (error) {
-        console.error("Comment submission error:", error);
+        console.error("Comment submission failed:", error);
     }
 }
