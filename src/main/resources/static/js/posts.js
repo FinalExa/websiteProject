@@ -1,4 +1,4 @@
-async function renderPost(templateHtml, post) {
+function renderPost(templateHtml, post) {
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = templateHtml;
     const postEl = tempDiv.firstElementChild;
@@ -9,62 +9,21 @@ async function renderPost(templateHtml, post) {
     const pic = post.profile_pic || '/img/default-avatar.png';
     postEl.querySelector('.post-img-target').src = pic;
     postEl.querySelector('.post-username-target').innerText = post.username;
-    postEl.querySelector('.post-link-target').href = `javascript:navigateTo('profile/${post.username}')`;
 
-    const rawDate = post.date || post.date_posted || post.datePosted;
-    if (rawDate) {
-        postEl.querySelector('.post-date-target').innerText = new Date(rawDate).toLocaleString();
-    }
+    const link = postEl.querySelector('.post-link-target');
+    link.href = "#";
+    link.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        navigateTo(`profile/${post.username}`);
+    };
 
     postEl.querySelector('.post-text-target').innerText = post.content;
 
     const upSpan = postEl.querySelector('.upvote-count-target');
     const downSpan = postEl.querySelector('.downvote-count-target');
-    const commentSpan = postEl.querySelector('.comment-count-target');
-
     if (upSpan) upSpan.innerText = post.upvotes || 0;
     if (downSpan) downSpan.innerText = post.downvotes || 0;
-    if (commentSpan) commentSpan.innerText = post.commentCount || 0;
-
-    const upBtn = postEl.querySelector('.upvote-btn');
-    const downBtn = postEl.querySelector('.downvote-btn');
-
-    if (upBtn) {
-        if (post.user_vote === 'UPVOTE') upBtn.classList.add('upvoted');
-        upBtn.onclick = (e) => {
-            e.stopPropagation();
-            handleVote(post.id, 'UPVOTE', upSpan, downSpan, upBtn);
-        };
-    }
-
-    if (downBtn) {
-        if (post.user_vote === 'DOWNVOTE') downBtn.classList.add('downvoted');
-        downBtn.onclick = (e) => {
-            e.stopPropagation();
-            handleVote(post.id, 'DOWNVOTE', upSpan, downSpan, downBtn);
-        };
-    }
-
-    const sharedTarget = postEl.querySelector('.shared-post-target-container');
-    if (post.shared_post && sharedTarget) {
-        const resp = await fetch('/api/content/shared-post-item');
-        if (resp.ok) {
-            const sharedTemplate = await resp.text();
-            const sDiv = document.createElement('div');
-            sDiv.innerHTML = sharedTemplate;
-            const inner = sDiv.firstElementChild;
-
-            inner.querySelector('.shared-post-username').innerText = `@${post.shared_post.username}`;
-            inner.querySelector('.shared-post-body').innerText = post.shared_post.content;
-
-            inner.onclick = (e) => {
-                e.stopPropagation();
-                navigateTo(`post/${post.shared_post.id}`);
-            };
-
-            sharedTarget.appendChild(inner);
-        }
-    }
 
     return postEl;
 }

@@ -1,3 +1,26 @@
+async function loadProfilePosts(username) {
+    const container = document.getElementById('user-posts-container');
+    if (!container) return;
+
+    try {
+        const [postsReq, templateReq] = await Promise.all([
+            fetch(`/api/posts?username=${username}`),
+            fetch('/api/content/post-item')
+        ]);
+
+        const posts = await postsReq.json();
+        const templateHtml = await templateReq.text();
+
+        container.innerHTML = '';
+        posts.forEach(post => {
+            const postEl = renderPost(templateHtml, post);
+            container.appendChild(postEl);
+        });
+    } catch (e) {
+        console.error("Failed to load profile posts", e);
+    }
+}
+
 async function uploadPic() {
     const fileInput = document.getElementById('pic-upload');
     if (!fileInput || fileInput.files.length === 0) {

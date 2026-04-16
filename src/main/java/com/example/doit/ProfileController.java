@@ -43,7 +43,6 @@ public class ProfileController {
             Files.copy(file.getInputStream(), newFilePath, StandardCopyOption.REPLACE_EXISTING);
 
             User user = userRepository.findByUsername(username).orElseThrow();
-            // Store path relative to static folder
             String dbPath = "img/profile_pictures/" + username + "/0.png";
             user.setProfilePicPath(dbPath);
             userRepository.save(user);
@@ -66,6 +65,17 @@ public class ProfileController {
                     "user", user.getUsername(),
                     "profile_pic", "/" + pic,
                     "is_logged_in", true
+            ));
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/user-info/{username}")
+    public ResponseEntity<?> getPublicUserInfo(@PathVariable String username) {
+        return userRepository.findByUsername(username).map(user -> {
+            String pic = user.getProfilePicPath() != null ? user.getProfilePicPath() : "img/default-avatar.png";
+            return ResponseEntity.ok(Map.of(
+                    "username", user.getUsername(),
+                    "profile_pic", "/" + pic
             ));
         }).orElse(ResponseEntity.notFound().build());
     }

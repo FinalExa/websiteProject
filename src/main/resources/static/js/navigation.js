@@ -1,7 +1,9 @@
 async function updateNavigation(forceData = null) {
     try {
         const data = forceData || await (await fetch('/api/check-auth')).json();
-        const loggedInNav = document.getElementById('logged-in-nav');
+
+        // FIX: Check both common naming conventions to be safe
+        const loggedInNav = document.getElementById('logged-in-nav') || document.getElementById('loggedInNav');
         const userBtn = document.getElementById('btn-user');
 
         if (data.is_logged_in) {
@@ -23,7 +25,6 @@ async function navigateTo(pageName) {
     const authCheck = await fetch('/api/check-auth');
     const auth = await authCheck.json();
 
-    // Redirect to login if trying to access user_center while logged out
     if (pageName === 'user_center' && !auth.is_logged_in) {
         pageName = 'user';
     }
@@ -34,51 +35,29 @@ async function navigateTo(pageName) {
     }
 
     try {
-        let contentUrl;
-        let profileUser = null;
-        let postId = null;
-
-        // Routing Logic
-        if (pageName === 'user_center') {
-            contentUrl = `/api/content/personal_area_content`;
-        } else if (pageName.startsWith('profile/')) {
-            profileUser = pageName.split('/')[1];
-            contentUrl = `/api/content/user_profile_public`;
-        } else if (pageName.startsWith('post/')) {
-            postId = pageName.split('/')[1];
-            contentUrl = `/api/content/post_view`;
-        } else {
-            contentUrl = `/api/content/${pageName}`;
-        }
+        // We use the full pageName (e.g., 'profile/username')
+        // Your Java controller needs @GetMapping("/api/content/{page}/**") to handle this
+        let contentUrl = `/api/content/${pageName}`;
 
         const response = await fetch(contentUrl);
-        if (!response.ok) throw new Error('Page not found');
-        main.innerHTML = await response.text();
+        if (!response.ok) throw new Error("Page not found");
 
-        if (postId) {
-            loadSinglePost(postId);
-        } else if (profileUser) {
-            loadPosts(profileUser);
-        } else if (pageName === 'home') {
-            loadPosts();
-        } else if (pageName === 'user' && !auth.is_logged_in) {
-            loadLoginView();
+        const html = await response.text();
+        main.innerHTML = html;
+
+        // DATA LOADING LOGIC
+        if (pageName === 'home') {
+            loadHomeFeed();
+        } else if (pageName.startsWith('profile/')) {
+            const username = pageName.split('/')[1];
+            loadPublicProfile(username);
+        } else if (pageName.startsWith('post/')) {
+            const postId = pageName.split('/')[1];
+            if (typeof loadSinglePost === 'function') loadSinglePost(postId);
         } else if (pageName === 'user_center') {
-            const userDisplay = document.getElementById('display-username');
-            if (userDisplay) userDisplay.innerText = auth.user;
-
-            try {
-                const dataResponse = await fetch('/api/data');
-                if (dataResponse.ok) {
-                    const userData = await dataResponse.json();
-                    const picDisplay = document.getElementById('display-profile-pic');
-                    if (picDisplay && userData.profile_pic) {
-                        picDisplay.src = userData.profile_pic + "?v=" + Date.now();
-                    }
-                }
-            } catch (e) {
-                console.error("Failed to load user profile data", e);
-            }
+            const nameDisp = document.getElementById('display-username');
+            if (nameDisp) nameDisp.innerText = auth.user;
+            loadUserCenterData();
         }
 
     } catch (error) {
@@ -89,29 +68,79 @@ async function navigateTo(pageName) {
     await updateNavigation(auth);
 }
 
-document.getElementById('btn-user').addEventListener('click', () => {
-    navigateTo('user_center');
+async function loadPublicProfile(username) {
+    try {
+        const response = await fetch(`/api/user-info/${username}`);
+        if (response.ok) {
+            const data = await response.json();
+            const headerName = document.getElementById('profile-username-header');
+            const headerPic = document.getElementById('profile-avatar-header');
+            if (headerName) headerName.innerText = data.username;
+            if (headerPic) headerPic.src = data.profile_pic || '/img/default-avatar.png';
+        }
+    } catch (e) { console.error("Profile header error", e); }
+
+    loadPostsIntoContainer(`/api/posts?username=${username}`, 'user-posts-container');
+}
+
+async function loadUserCenterData() {
+    const res = await fetch('/api/data');
+    if (res.ok) {
+        const data = await res.json();
+        const pic = document.getElementById('display-profile-pic');
+        if (pic && data.profile_pic) pic.src = data.profile_pic + "?v=" + Date.now();
+    }
+}
+
+async function loadPostsIntoContainer(apiUrl, containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    try {
+        const [postsReq, templateReq] = await Promise.all([
+            fetch(apiUrl),
+            fetch('/api/content/post-item')
+        ]);
+        const posts = await postsReq.json();
+        const templateHtml = await templateReq.text();
+        container.innerHTML = posts.length === 0 ? '<p>No posts found.</p>' : '';
+        posts.forEach(post => {
+            container.appendChild(renderPost(templateHtml, post));
+        });
+    } catch (e) { console.error("Failed to load posts", e); }
+}
+
+function loadHomeFeed() {
+    loadPostsIntoContainer('/api/posts', 'posts-container');
+}
+
+// FIX: Ensure the "Go to Profile" logic is correctly mapped
+async function goToMyPublicProfile() {
+    const res = await fetch('/api/check-auth');
+    const data = await res.json();
+    if (data.is_logged_in) {
+        navigateTo(`profile/${data.user}`);
+    } else {
+        navigateTo('user');
+    }
+}
+
+// EVENT LISTENERS
+document.addEventListener('DOMContentLoaded', () => {
+    // User Center Button
+    document.getElementById('btn-user')?.addEventListener('click', () => navigateTo('user_center'));
+
+    // THE MISSING LINK: The "Go to Profile" button listener
+    // Make sure your button in index.html has id="btn-go-to-profile" or similar
+    document.getElementById('btn-my-profile')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        goToMyPublicProfile();
+    });
+
+    const path = window.location.pathname.replace(/^\/+/g, '') || 'home';
+    navigateTo(path);
 });
 
 window.addEventListener('popstate', () => {
     const path = window.location.pathname.substring(1) || 'home';
     navigateTo(path);
 });
-
-window.addEventListener('DOMContentLoaded', () => {
-    let path = window.location.pathname.replace(/^\/+/g, '');
-    const initialPage = path || 'home';
-    navigateTo(initialPage);
-});
-
-async function goToMyPublicProfile() {
-    try {
-        const response = await fetch('/api/check-auth');
-        const data = await response.json();
-        if (data.is_logged_in && data.user) {
-            navigateTo(`profile/${data.user}`);
-        }
-    } catch (e) {
-        console.error("Profile navigation failed", e);
-    }
-}
