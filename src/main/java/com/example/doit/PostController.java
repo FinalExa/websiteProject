@@ -60,14 +60,22 @@ public class PostController {
         map.put("id", post.getId());
         map.put("content", post.getContent());
         map.put("username", post.getAuthor().getUsername());
-        map.put("date", post.getDatePosted());
-        map.put("upvotes", voteRepository.countByPostAndType(post, Vote.VoteType.UPVOTE.toString()));
-        map.put("downvotes", voteRepository.countByPostAndType(post, Vote.VoteType.DOWNVOTE.toString()));
-        map.put("commentCount", commentRepository.countByPost(post));
-        String pic = post.getAuthor().getProfilePicPath() != null ? post.getAuthor().getProfilePicPath() : "img/default-avatar.png";
-        map.put("profile_pic", "/" + pic);
-        voteRepository.findByPostAndUserUsername(post, currentUser)
-                .ifPresent(v -> map.put("user_vote", v.getType().toString()));
+        map.put("date_posted", post.getDatePosted());
+        map.put("profile_pic", "/" + (post.getAuthor().getProfilePicPath() != null ?
+                post.getAuthor().getProfilePicPath() : "img/default-avatar.png"));
+
+        if (post.getSharedPost() != null) {
+            Map<String, Object> shared = new HashMap<>();
+            shared.put("id", post.getSharedPost().getId());
+            shared.put("content", post.getSharedPost().getContent());
+            shared.put("username", post.getSharedPost().getAuthor().getUsername());
+            map.put("shared_post", shared);
+        }
+
+        map.put("upvotes", post.getUpvoteCount());
+        map.put("downvotes", post.getDownvoteCount());
+        map.put("commentCount", post.getComments().size());
+
         return map;
     }
 
@@ -165,21 +173,27 @@ public class PostController {
     }
 
     @PostMapping("/posts/{id}/share")
-    @ResponseBody
-    public ResponseEntity<?> sharePost(@PathVariable Long id, @RequestBody Map<String, String> body, HttpSession session) {
+    public ResponseEntity<?> sharePost(@PathVariable Long id, @RequestBody Map<String, String> payload, HttpSession session) {
         String username = (String) session.getAttribute("user");
         if (username == null) return ResponseEntity.status(401).build();
 
-        User user = userRepository.findByUsername(username).orElseThrow();
-        Post originalPost = postRepository.findById(id).orElseThrow();
+        User user = userRepository.findByUsername(username)
+                .orElse(null);
+        Post originalPost = postRepository.findById(id)
+                .orElse(null);
 
-        Post newPost = new Post();
-        newPost.setContent(body.get("content"));
-        newPost.setAuthor(user);
-        newPost.setSharedPost(originalPost);
-        newPost.setDatePosted(LocalDateTime.now());
+        if (user == null || originalPost == null) {
+            return ResponseEntity.status(404).body(Map.of("message", "User or Post not found"));
+        }
 
-        postRepository.save(newPost);
+        Post sharedPost = new Post();
+        sharedPost.setContent(payload.get("content"));
+        sharedPost.setAuthor(user);
+        sharedPost.setSharedPost(originalPost);
+        sharedPost.setDatePosted(LocalDateTime.now());
+
+        postRepository.save(sharedPost);
+
         return ResponseEntity.ok(Map.of("status", "success"));
     }
 }

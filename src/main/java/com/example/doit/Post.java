@@ -28,14 +28,35 @@ public class Post {
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
 
-    public List<Comment> getComments() { return comments; }
+    // SELF-REFERENCE FOR SHARING FEATURE
+    @ManyToOne
+    @JoinColumn(name = "shared_post_id")
+    private Post sharedPost;
 
+    // CONSTRUCTORS
+    public Post() {}
+
+    // GETTERS AND SETTERS
     public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
     public String getContent() { return content; }
     public void setContent(String content) { this.content = content; }
+
     public LocalDateTime getDatePosted() { return datePosted; }
+    public void setDatePosted(LocalDateTime datePosted) { this.datePosted = datePosted; }
+
     public User getAuthor() { return author; }
     public void setAuthor(User author) { this.author = author; }
+
+    public List<Vote> getVotes() { return votes; }
+    public void setVotes(List<Vote> votes) { this.votes = votes; }
+
+    public List<Comment> getComments() { return comments; }
+    public void setComments(List<Comment> comments) { this.comments = comments; }
+
+    public Post getSharedPost() { return sharedPost; }
+    public void setSharedPost(Post sharedPost) { this.sharedPost = sharedPost; }
 
     public long getUpvoteCount() {
         return votes.stream().filter(v -> "UPVOTE".equals(v.getType())).count();
@@ -43,20 +64,5 @@ public class Post {
 
     public long getDownvoteCount() {
         return votes.stream().filter(v -> "DOWNVOTE".equals(v.getType())).count();
-    }
-
-    public List<Vote> getVotes() {
-        return votes;
-    }
-
-    @ManyToOne
-    @JoinColumn(name = "shared_post_id")
-    private Post sharedPost;
-
-    public Post getSharedPost() { return sharedPost; }
-    public void setSharedPost(Post sharedPost) { this.sharedPost = sharedPost; }
-
-    public void setDatePosted(LocalDateTime datePosted) {
-        this.datePosted = datePosted;
     }
 }
