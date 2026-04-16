@@ -48,4 +48,15 @@ public class Post {
     public List<Vote> getVotes() {
         return votes;
     }
+
+    @ManyToOne
+    @JoinColumn(name = "shared_post_id")
+    private Post sharedPost;
+
+    public Post getSharedPost() { return sharedPost; }
+    public void setSharedPost(Post sharedPost) { this.sharedPost = sharedPost; }
+
+    public void setDatePosted(LocalDateTime datePosted) {
+        this.datePosted = datePosted;
+    }
 }

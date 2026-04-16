@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.stereotype.Controller;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -161,6 +162,25 @@ public class PostController {
         return postRepository.findById(id)
                 .map(post -> ResponseEntity.ok(formatPost(post, currentUser)))
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/posts/{id}/share")
+    @ResponseBody
+    public ResponseEntity<?> sharePost(@PathVariable Long id, @RequestBody Map<String, String> body, HttpSession session) {
+        String username = (String) session.getAttribute("user");
+        if (username == null) return ResponseEntity.status(401).build();
+
+        User user = userRepository.findByUsername(username).orElseThrow();
+        Post originalPost = postRepository.findById(id).orElseThrow();
+
+        Post newPost = new Post();
+        newPost.setContent(body.get("content"));
+        newPost.setAuthor(user);
+        newPost.setSharedPost(originalPost);
+        newPost.setDatePosted(LocalDateTime.now());
+
+        postRepository.save(newPost);
+        return ResponseEntity.ok(Map.of("status", "success"));
     }
 }
 

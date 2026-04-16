@@ -1,4 +1,4 @@
-function renderPost(templateHtml, post) {
+async function renderPost(templateHtml, post) {
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = templateHtml;
     const postEl = tempDiv.firstElementChild;
@@ -28,9 +28,9 @@ function renderPost(templateHtml, post) {
 
     const upBtn = postEl.querySelector('.upvote-btn');
     const downBtn = postEl.querySelector('.downvote-btn');
-    const commentBtn = postEl.querySelector('.comment-toggle-btn');
 
     if (upBtn) {
+        if (post.user_vote === 'UPVOTE') upBtn.classList.add('upvoted');
         upBtn.onclick = (e) => {
             e.stopPropagation();
             handleVote(post.id, 'UPVOTE', upSpan, downSpan, upBtn);
@@ -38,30 +38,44 @@ function renderPost(templateHtml, post) {
     }
 
     if (downBtn) {
+        if (post.user_vote === 'DOWNVOTE') downBtn.classList.add('downvoted');
         downBtn.onclick = (e) => {
             e.stopPropagation();
             handleVote(post.id, 'DOWNVOTE', upSpan, downSpan, downBtn);
         };
     }
 
-    if (commentBtn) {
-        commentBtn.onclick = (e) => {
-            e.stopPropagation();
-            toggleComments(commentBtn);
-        };
+    const sharedTarget = postEl.querySelector('.shared-post-target-container');
+    if (post.shared_post && sharedTarget) {
+        const resp = await fetch('/api/content/shared-post-item');
+        if (resp.ok) {
+            const sharedTemplate = await resp.text();
+            const sDiv = document.createElement('div');
+            sDiv.innerHTML = sharedTemplate;
+            const inner = sDiv.firstElementChild;
+
+            inner.querySelector('.shared-post-username').innerText = `@${post.shared_post.username}`;
+            inner.querySelector('.shared-post-body').innerText = post.shared_post.content;
+
+            inner.onclick = (e) => {
+                e.stopPropagation();
+                navigateTo(`post/${post.shared_post.id}`);
+            };
+
+            sharedTarget.appendChild(inner);
+        }
     }
 
     return postEl;
 }
 
-async function loadPosts(targetUsername = null) {
-    const container = document.getElementById('posts-container') || document.getElementById('user-posts-container');
+async function loadPosts() {
+    const container = document.getElementById('posts-container');
     if (!container) return;
 
     try {
-        const url = targetUsername ? `/api/posts/user/${targetUsername}` : '/api/posts';
         const [response, templateReq] = await Promise.all([
-            fetch(url),
+            fetch('/api/posts'),
             fetch('/api/content/post-item')
         ]);
 
@@ -71,7 +85,8 @@ async function loadPosts(targetUsername = null) {
             container.innerHTML = '';
 
             for (const post of posts) {
-                container.appendChild(renderPost(templateHtml, post));
+                const postEl = await renderPost(templateHtml, post);
+                container.appendChild(postEl);
             }
         }
     } catch (error) {
@@ -93,12 +108,12 @@ async function loadSinglePost(postId) {
             const post = await response.json();
             const templateHtml = await templateReq.text();
             target.innerHTML = '';
-            const postEl = renderPost(templateHtml, post);
+
+            const postEl = await renderPost(templateHtml, post);
             postEl.onclick = null;
             postEl.style.cursor = 'default';
             target.appendChild(postEl);
 
-            // Auto-open comments in single view
             const commentBtn = postEl.querySelector('.comment-toggle-btn');
             if (commentBtn) toggleComments(commentBtn);
         }
@@ -119,4 +134,33 @@ async function handleVote(postId, type, upSpan, downSpan, clickedBtn) {
             parent.querySelector('.downvote-btn').classList.toggle('downvoted', data.user_vote === 'DOWNVOTE');
         }
     } catch (e) { console.error("Vote failed", e); }
+}
+
+function openShareModal(btn) {
+    const postCard = btn.closest('.post-card');
+    const postId = postCard.dataset.postId;
+    const caption = prompt("Write something about this post...");
+
+    if (caption !== null) {
+        performShare(postId, caption);
+    }
+}
+
+async function performShare(originalPostId, caption) {
+    try {
+        const response = await fetch(`/api/posts/${originalPostId}/share`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content: caption })
+        });
+
+        if (response.ok) {
+            if (typeof showToast === 'function') {
+                showToast("Post shared successfully!", "success");
+            }
+            loadPosts();
+        }
+    } catch (e) {
+        console.error("Share failed", e);
+    }
 }
