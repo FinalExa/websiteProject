@@ -39,44 +39,55 @@ async function navigateTo(pageName) {
         const html = await response.text();
 
         if (pageName === 'user') {
-            main.innerHTML = `
-                <div class="auth-wrapper">
-                    <h2 id="user-title">Login</h2>
-                    <div id="auth-container"></div>
-                </div>`;
+            main.innerHTML = `<div class="auth-wrapper"><h2 id="user-title">Login</h2><div id="auth-container"></div></div>`;
             if (typeof loadLoginView === 'function') await loadLoginView();
         } else {
             main.innerHTML = html;
         }
 
         if (pageName === 'user_center') {
-            fetch('/api/data')
-                .then(res => res.json())
-                .then(data => {
-                    const userField = document.getElementById('display-username');
-                    const picField = document.getElementById('display-profile-pic');
-                    if (userField) userField.innerText = data.user;
-                    if (picField) picField.src = data.profile_pic + "?v=" + Date.now();
-                });
+            fetch('/api/data').then(res => res.json()).then(data => {
+                const userField = document.getElementById('display-username');
+                const picField = document.getElementById('display-profile-pic');
+                if (userField) userField.innerText = data.user;
+                if (picField) picField.src = data.profile_pic + "?v=" + Date.now();
+            });
         }
-
         else if (pageName === 'home') {
             if (typeof loadHomeFeed === 'function') loadHomeFeed();
         }
-
         else if (pageName.includes('profile/')) {
             const username = pageName.split('/').pop();
-
-            fetch(`/api/user-info/${username}`)
-                .then(res => res.json())
-                .then(data => {
-                    const nameHeader = document.getElementById('profile-username-header');
-                    const picHeader = document.getElementById('profile-avatar-header');
-                    if (nameHeader) nameHeader.innerText = data.username;
-                    if (picHeader) picHeader.src = data.profile_pic;
-                });
-
+            fetch(`/api/user-info/${username}`).then(res => res.json()).then(data => {
+                const nameHeader = document.getElementById('profile-username-header');
+                const picHeader = document.getElementById('profile-avatar-header');
+                if (nameHeader) nameHeader.innerText = data.username;
+                if (picHeader) picHeader.src = data.profile_pic;
+            });
             if (typeof loadProfilePosts === 'function') loadProfilePosts(username);
+        }
+
+        else if (pageName.includes('post/')) {
+            const postId = pageName.split('/').pop();
+            const container = document.getElementById('single-post-target');
+
+            if (container) {
+                try {
+                    const [postRes, templateRes] = await Promise.all([
+                        fetch(`/api/posts/${postId}`),
+                        fetch('/api/content/post-item')
+                    ]);
+
+                    const postData = await postRes.json();
+                    const templateHtml = await templateRes.text();
+
+                    container.innerHTML = '';
+                    container.appendChild(renderPost(templateHtml, postData));
+                } catch (err) {
+                    console.error("Error loading single post:", err);
+                    container.innerHTML = "<p>Error loading post.</p>";
+                }
+            }
         }
 
         await updateNavigation(auth);

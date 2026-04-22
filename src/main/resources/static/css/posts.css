@@ -36,6 +36,7 @@
     vertical-align: middle;
 }
 
+.comment-link-target,
 .post-link-target {
     text-decoration: none;
     color: #007bff;
