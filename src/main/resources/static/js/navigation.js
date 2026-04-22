@@ -2,7 +2,6 @@ async function updateNavigation(forceData = null) {
     try {
         const data = forceData || await (await fetch('/api/check-auth')).json();
 
-        // FIX: Check both common naming conventions to be safe
         const loggedInNav = document.getElementById('logged-in-nav') || document.getElementById('loggedInNav');
         const userBtn = document.getElementById('btn-user');
 
@@ -35,37 +34,37 @@ async function navigateTo(pageName) {
     }
 
     try {
-        // We use the full pageName (e.g., 'profile/username')
-        // Your Java controller needs @GetMapping("/api/content/{page}/**") to handle this
-        let contentUrl = `/api/content/${pageName}`;
-
-        const response = await fetch(contentUrl);
-        if (!response.ok) throw new Error("Page not found");
-
+        const response = await fetch(`/api/content/${pageName}`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const html = await response.text();
-        main.innerHTML = html;
 
-        // DATA LOADING LOGIC
-        if (pageName === 'home') {
-            loadHomeFeed();
-        } else if (pageName.startsWith('profile/')) {
-            const username = pageName.split('/')[1];
-            loadPublicProfile(username);
-        } else if (pageName.startsWith('post/')) {
-            const postId = pageName.split('/')[1];
-            if (typeof loadSinglePost === 'function') loadSinglePost(postId);
-        } else if (pageName === 'user_center') {
-            const nameDisp = document.getElementById('display-username');
-            if (nameDisp) nameDisp.innerText = auth.user;
-            loadUserCenterData();
+        if (pageName === 'user') {
+            main.innerHTML = `
+                <div class="auth-wrapper">
+                    <h2 id="user-title">Login</h2>
+                    <div id="auth-container"></div>
+                </div>`;
+
+            if (typeof loadLoginView === 'function') {
+                await loadLoginView();
+            }
+        } else {
+            main.innerHTML = html;
         }
 
-    } catch (error) {
-        console.error('Navigation error:', error);
-        main.innerHTML = `<div class="error">Error: ${error.message}</div>`;
-    }
+        if (pageName === 'home') {
+            if (typeof loadHomeFeed === 'function') loadHomeFeed();
+        } else if (pageName.includes('profile/')) {
+            const username = pageName.split('/').pop();
+            if (typeof loadProfilePosts === 'function') loadProfilePosts(username);
+        }
 
-    await updateNavigation(auth);
+        await updateNavigation(auth);
+
+    } catch (e) {
+        console.error("Navigation error:", e);
+        main.innerHTML = `<div class="error">Failed to load ${pageName}</div>`;
+    }
 }
 
 async function loadPublicProfile(username) {
@@ -113,7 +112,6 @@ function loadHomeFeed() {
     loadPostsIntoContainer('/api/posts', 'posts-container');
 }
 
-// FIX: Ensure the "Go to Profile" logic is correctly mapped
 async function goToMyPublicProfile() {
     const res = await fetch('/api/check-auth');
     const data = await res.json();
@@ -124,13 +122,10 @@ async function goToMyPublicProfile() {
     }
 }
 
-// EVENT LISTENERS
 document.addEventListener('DOMContentLoaded', () => {
     // User Center Button
     document.getElementById('btn-user')?.addEventListener('click', () => navigateTo('user_center'));
 
-    // THE MISSING LINK: The "Go to Profile" button listener
-    // Make sure your button in index.html has id="btn-go-to-profile" or similar
     document.getElementById('btn-my-profile')?.addEventListener('click', (e) => {
         e.preventDefault();
         goToMyPublicProfile();

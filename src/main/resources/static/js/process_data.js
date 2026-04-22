@@ -53,8 +53,7 @@ async function handleRegistration(e) {
 		const response = await fetch('/api/content/login-view');
 		container.innerHTML = await response.text();
 		title.innerText = "Login";
-		
-		// Attach login submit logic here later
+
 	}
 
 	async function loadRegisterView() {
@@ -65,8 +64,7 @@ async function handleRegistration(e) {
 		const response = await fetch('/api/content/register-view');
 		container.innerHTML = await response.text();
 		title.innerText = "Create Account";
-		
-		// Re-attach the registration listener we built earlier
+
 		if (typeof attachRegisterListener === "function") {
 			attachRegisterListener();
 		}

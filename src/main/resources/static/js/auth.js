@@ -1,13 +1,11 @@
 async function loadLoginView() {
     const container = document.getElementById('auth-container');
-    const title = document.getElementById('user-title');
     if (!container) return;
 
     try {
-        const response = await fetch('/api/content/login-view');
+        const response = await fetch('/api/content/login');
         container.innerHTML = await response.text();
-        if (title) title.innerText = "Login";
-        attachLoginListener(); 
+        attachLoginListener();
     } catch (error) {
         console.error('Error loading login view:', error);
     }
@@ -15,14 +13,12 @@ async function loadLoginView() {
 
 async function loadRegisterView() {
     const container = document.getElementById('auth-container');
-    const title = document.getElementById('user-title');
     if (!container) return;
 
     try {
-        const response = await fetch('/api/content/register-view');
+        const response = await fetch('/api/content/register');
         container.innerHTML = await response.text();
-        if (title) title.innerText = "Create Account";
-        attachRegisterListener(); // Ensure this is defined in process_data.js
+        attachRegisterListener();
     } catch (error) {
         console.error('Error loading register view:', error);
     }
@@ -72,7 +68,7 @@ async function handleLogout() {
             if (typeof updateNavigation === 'function') {
                 updateNavigation();
             }
-            navigateTo('user'); // Go back to login view
+            navigateTo('user');
         } else {
             showToast("Logout failed. Please try again.", 'error');
         }

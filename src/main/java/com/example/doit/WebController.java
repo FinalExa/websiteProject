@@ -51,7 +51,8 @@ public class WebController {
 
         return switch (page) {
             case "home" -> "home_content";
-            case "user" -> "user_content";
+            case "login" -> "login_content";
+            case "register" -> "register_content";
             case "post-item" -> "post_item";
             case "user_center" -> "personal_area_content";
             default -> "error/404";
