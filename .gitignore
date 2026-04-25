@@ -36,3 +36,5 @@ logs/
 # If you want to keep the folder structure but not the actual uploaded images:
 src/main/resources/static/img/profile_pictures/*
 !src/main/resources/static/img/profile_pictures/.gitkeep
+user_posts/*
+!user_posts/.gitkeep
