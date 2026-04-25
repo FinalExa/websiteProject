@@ -1,14 +1,16 @@
-<div class="share-indicator" style="display: none;">
+<div class="share-indicator">
     <span class="sharer-name-target"></span> has shared...
 </div>
-<div class="post-card" id="post-card-template" style="cursor: pointer;">
+<div class="post-card" id="post-card-template">
     <button class="share-btn" onclick="event.stopPropagation(); toggleShareBox(this)">
         <i class="fas fa-share-square"></i>
     </button>
+
     <div class="share-textbox" style="display: none;" onclick="event.stopPropagation()">
         <textarea class="share-input" placeholder="Say something about this..."></textarea>
         <button class="submit-share-btn" onclick="submitShare(this)">Share</button>
     </div>
+
     <div class="post-header">
         <img src="" class="post-avatar-small post-img-target">
         <div class="post-meta">
@@ -20,7 +22,12 @@
     </div>
 
     <div class="post-content post-text-target"></div>
-    <div class="nested-post-container" style="display: none;"></div>
+
+    <div class="post-image-viewport" style="display: none;">
+        <img src="" class="post-content-image">
+    </div>
+
+    <div class="nested-post-container"></div>
 
     <div class="post-actions">
         <button class="vote-btn upvote-btn" onclick="event.stopPropagation()">

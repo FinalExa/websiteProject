@@ -8,6 +8,5 @@ public interface VoteRepository extends JpaRepository<Vote, Long> {
 
     Optional<Vote> findByPostAndUser(Post post, User user);
 
-    // This will now compile
     long countByPostAndType(Post post, String type);
 }

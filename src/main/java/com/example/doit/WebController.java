@@ -38,7 +38,7 @@ public class WebController {
         }).orElse("error/404");
     }
 
-    @GetMapping("/api/content/{page}/**") // Added /** to catch sub-paths
+    @GetMapping("/api/content/{page}/**")
     public String getContent(@PathVariable String page, HttpServletRequest request) {
         String fullPath = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
 

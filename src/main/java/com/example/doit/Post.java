@@ -18,6 +18,11 @@ public class Post {
 
     private LocalDateTime datePosted = LocalDateTime.now();
 
+    private String imageExtension;
+
+    public String getImageExtension() { return imageExtension; }
+    public void setImageExtension(String imageExtension) { this.imageExtension = imageExtension; }
+
     @ManyToOne
     @JoinColumn(name = "user_username", nullable = false)
     private User author;
@@ -28,15 +33,12 @@ public class Post {
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
 
-    // SELF-REFERENCE FOR SHARING FEATURE
     @ManyToOne
     @JoinColumn(name = "shared_post_id")
     private Post sharedPost;
 
-    // CONSTRUCTORS
     public Post() {}
 
-    // GETTERS AND SETTERS
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

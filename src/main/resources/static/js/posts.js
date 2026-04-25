@@ -1,3 +1,37 @@
+async function submitPost() {
+    const content = document.getElementById('post-content').value;
+    const fileInput = document.getElementById('post-image-file');
+
+    if (!content.trim() && (!fileInput.files || !fileInput.files[0])) {
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('content', content);
+    if (fileInput.files[0]) {
+        formData.append('file', fileInput.files[0]);
+    }
+
+    try {
+        const response = await fetch('/api/posts', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (response.ok) {
+            document.getElementById('post-content').value = '';
+            fileInput.value = '';
+            document.getElementById('post-image-preview-container').style.display = 'none';
+
+            setTimeout(() => {
+                if (typeof loadHomeFeed === 'function') loadHomeFeed();
+            }, 300);
+        }
+    } catch (e) {
+        console.error("Error posting:", e);
+    }
+}
+
 function renderPost(templateHtml, post) {
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = templateHtml;
@@ -28,42 +62,54 @@ function renderPost(templateHtml, post) {
     };
 
     const textTarget = postEl.querySelector('.post-text-target');
+    const imageViewport = postEl.querySelector('.post-image-viewport');
+    const contentImg = postEl.querySelector('.post-content-image');
     const nestedContainer = postEl.querySelector('.nested-post-container');
 
-    if (post.shared_post) {
-        textTarget.innerText = post.content || "";
-        if (!post.content) textTarget.style.display = 'none';
+    if (post.content && post.content.trim() !== "") {
+        textTarget.innerText = post.content;
+        textTarget.style.display = 'block';
+    } else {
+        textTarget.style.display = 'none';
+    }
 
-        if (nestedContainer) {
-            nestedContainer.style.display = 'block';
+    if (post.image_url) {
+        if (imageViewport && contentImg) {
+            imageViewport.style.display = 'block';
+            contentImg.src = post.image_url;
+        }
+    } else if (imageViewport) {
+        imageViewport.style.display = 'none';
+    }
 
-            const previewDiv = document.createElement('div');
-            previewDiv.className = 'original-post-preview';
-            previewDiv.style.cssText = 'border: 1px solid #e0e0e0; border-left: 4px solid #007bff; padding: 10px; margin-top: 10px; background: #fafafa; border-radius: 4px; cursor: pointer;';
+    if (post.shared_post && nestedContainer) {
+        nestedContainer.style.display = 'block';
 
-            previewDiv.innerHTML = `
+        const previewDiv = document.createElement('div');
+        previewDiv.className = 'original-post-preview';
+        previewDiv.style.cssText = 'border: 1px solid #e0e0e0; border-left: 4px solid #007bff; padding: 10px; margin-top: 10px; background: #fafafa; border-radius: 4px; cursor: pointer;';
+
+        let originalImgHtml = post.shared_post.image_url
+            ? `<img src="${post.shared_post.image_url}" style="max-width:100%; max-height:150px; display:block; margin-top:5px; object-fit:contain;">`
+            : '';
+
+        previewDiv.innerHTML = `
             <strong>@${post.shared_post.username}</strong>
-            <p>${post.shared_post.content}</p>
+            <p>${post.shared_post.content || ""}</p>
+            ${originalImgHtml}
         `;
 
-            const originalId = post.shared_post.id || post.shared_post.postId || post.shared_post_id;
+        const originalId = post.shared_post.id;
+        previewDiv.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (originalId) navigateTo(`post/${originalId}`);
+        };
 
-            previewDiv.onclick = (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-
-                if (originalId) {
-                    navigateTo(`post/${originalId}`);
-                } else {
-                    console.error("Original Post ID is missing in shared_post object", post.shared_post);
-                }
-            };
-
-            nestedContainer.innerHTML = '';
-            nestedContainer.appendChild(previewDiv);
-        }
-    } else {
-        textTarget.innerText = post.content;
+        nestedContainer.innerHTML = '';
+        nestedContainer.appendChild(previewDiv);
+    } else if (nestedContainer) {
+        nestedContainer.style.display = 'none';
     }
 
     const upSpan = postEl.querySelector('.upvote-count-target');
@@ -81,6 +127,22 @@ function renderPost(templateHtml, post) {
 
     fragment.appendChild(postEl);
     return fragment;
+}
+
+function previewPostImage(input) {
+    const container = document.getElementById('post-image-preview-container');
+    const img = document.getElementById('post-image-preview');
+
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            img.src = e.target.result;
+            container.style.display = 'block';
+        }
+        reader.readAsDataURL(input.files[0]);
+    } else {
+        container.style.display = 'none';
+    }
 }
 
 async function loadPosts() {
@@ -160,6 +222,7 @@ function toggleShareBox(btn) {
     }
 }
 
+
 async function submitShare(btn) {
     const postCard = btn.closest('.post-card');
     const postId = postCard.dataset.postId;
@@ -176,7 +239,6 @@ async function submitShare(btn) {
             postCard.querySelector('.share-textbox').style.display = 'none';
             if (typeof showToast === 'function') showToast("Post shared!", "success");
 
-            // Reload appropriate feed
             if (typeof loadHomeFeed === 'function') loadHomeFeed();
             else loadPosts();
         }

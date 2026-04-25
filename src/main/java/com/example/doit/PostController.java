@@ -4,7 +4,14 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -57,19 +64,23 @@ public class PostController {
 
     private Map<String, Object> formatPost(Post post, String currentUser) {
         Map<String, Object> map = new HashMap<>();
+
         map.put("id", post.getId());
         map.put("content", post.getContent());
         map.put("username", post.getAuthor().getUsername());
         map.put("date_posted", post.getDatePosted());
-        map.put("profile_pic", "/" + (post.getAuthor().getProfilePicPath() != null ?
-                post.getAuthor().getProfilePicPath() : "img/default-avatar.png"));
+
+        String picPath = post.getAuthor().getProfilePicPath();
+        map.put("profile_pic", (picPath != null) ? "/" + picPath : "/img/default-avatar.png");
+
+        if (post.getImageExtension() != null && !post.getImageExtension().isEmpty()) {
+            map.put("image_url", "/img/user_posts/" + post.getAuthor().getUsername() + "/" + post.getId() + post.getImageExtension());
+        } else {
+            map.put("image_url", null);
+        }
 
         if (post.getSharedPost() != null) {
-            Map<String, Object> shared = new HashMap<>();
-            shared.put("id", post.getSharedPost().getId());
-            shared.put("content", post.getSharedPost().getContent());
-            shared.put("username", post.getSharedPost().getAuthor().getUsername());
-            map.put("shared_post", shared);
+            map.put("shared_post", formatPost(post.getSharedPost(), currentUser));
         }
 
         map.put("upvotes", post.getUpvoteCount());
@@ -79,17 +90,47 @@ public class PostController {
         return map;
     }
 
-    @PostMapping("/post")
+    @PostMapping(value = "/posts", consumes = {"multipart/form-data"})
     @ResponseBody
-    public ResponseEntity<?> createPost(@RequestBody Map<String, String> data, HttpSession session) {
+    public ResponseEntity<?> createPost(
+            @RequestParam(value = "content", required = false) String content,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            HttpSession session) {
+
         String username = (String) session.getAttribute("user");
         if (username == null) return ResponseEntity.status(401).build();
+
         User user = userRepository.findByUsername(username).orElse(null);
+        if (user == null) return ResponseEntity.status(404).build();
+
         Post post = new Post();
-        post.setContent(data.get("content"));
+        post.setContent(content != null ? content : "");
         post.setAuthor(user);
-        postRepository.save(post);
-        return ResponseEntity.ok(Map.of("message", "Post created!"));
+        post.setDatePosted(LocalDateTime.now());
+        post = postRepository.save(post);
+
+        if (file != null && !file.isEmpty()) {
+            try {
+                String originalFileName = file.getOriginalFilename();
+                if (originalFileName != null && originalFileName.contains(".")) {
+                    String extension = originalFileName.substring(originalFileName.lastIndexOf("."));
+                    post.setImageExtension(extension);
+
+                    String baseDir = System.getProperty("user.dir") + "/user_posts/" + username + "/";
+                    String fileName = post.getId() + extension;
+
+                    Path path = Paths.get(baseDir + fileName);
+                    Files.createDirectories(path.getParent());
+                    Files.write(path, file.getBytes());
+
+                    post = postRepository.save(post);
+                }
+            } catch (Exception e) {
+                return ResponseEntity.status(500).body("File upload failed: " + e.getMessage());
+            }
+        }
+
+        return ResponseEntity.ok(formatPost(post, username));
     }
 
     @PostMapping("/posts/{id}/vote")
@@ -110,7 +151,7 @@ public class PostController {
                         v.setType(voteType.toString());
                         voteRepository.save(v);
                     }
-                }, // Added the missing comma here
+                },
                 () -> {
                     Vote v = new Vote();
                     v.setPost(post);
@@ -196,5 +237,13 @@ public class PostController {
 
         return ResponseEntity.ok(Map.of("status", "success"));
     }
-}
 
+    @Configuration
+    public class WebConfig implements WebMvcConfigurer {
+        @Override
+        public void addResourceHandlers(ResourceHandlerRegistry registry) {
+            registry.addResourceHandler("/img/user_posts/**")
+                    .addResourceLocations("file:user_posts/");
+        }
+    }
+}

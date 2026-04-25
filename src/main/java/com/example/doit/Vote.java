@@ -8,7 +8,6 @@ import jakarta.persistence.*;
 })
 public class Vote {
 
-    // Define this so the Repository and Controller can use it
     public enum VoteType {
         UPVOTE,
         DOWNVOTE
