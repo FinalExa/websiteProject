@@ -2,14 +2,25 @@ async function submitPost() {
     const content = document.getElementById('post-content').value;
     const fileInput = document.getElementById('post-image-file');
 
-    if (!content.trim() && (!fileInput.files || !fileInput.files[0])) {
+    const file = fileInput.files ? fileInput.files[0] : null;
+
+    if (file && file.size > 8 * 1024 * 1024) {
+        if (typeof showToast === 'function') {
+            showToast("File is too large! Maximum size is 10MB.", "error");
+        } else {
+            alert("File is too large! Maximum size is 10MB.");
+        }
+        return;
+    }
+
+    if (!content.trim() && !file) {
         return;
     }
 
     const formData = new FormData();
     formData.append('content', content);
-    if (fileInput.files[0]) {
-        formData.append('file', fileInput.files[0]);
+    if (file) {
+        formData.append('file', file);
     }
 
     try {
@@ -23,12 +34,17 @@ async function submitPost() {
             fileInput.value = '';
             document.getElementById('post-image-preview-container').style.display = 'none';
 
+            if (typeof showToast === 'function') showToast("Post created!", "success");
+
             setTimeout(() => {
                 if (typeof loadHomeFeed === 'function') loadHomeFeed();
             }, 300);
+        } else if (response.status === 413) {
+            if (typeof showToast === 'function') showToast("Server rejected the file size.", "error");
         }
     } catch (e) {
         console.error("Error posting:", e);
+        if (typeof showToast === 'function') showToast("An error occurred during upload.", "error");
     }
 }
 

@@ -313,12 +313,17 @@
     text-align: center;
     overflow: hidden;
     margin: 10px 0;
+    border-radius: 8px;
+    border: 1px solid #000000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .post-content-image {
     max-width: 100%;
     max-height: 80vh;
     object-fit: contain;
+    display: block;
+    margin: 0 auto;
 }
 
 .post-image-controls {
