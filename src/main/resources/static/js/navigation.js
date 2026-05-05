@@ -7,6 +7,7 @@ async function updateNavigation(forceData = null) {
         const homeFeedBtn = document.getElementById('home-feed'); // Target the Home Feed button
 
         if (data.is_logged_in) {
+            document.body.dataset.currentUser = data.user;
             if (loggedInNav) loggedInNav.style.display = 'block';
             if (homeFeedBtn) homeFeedBtn.style.display = 'block';
             if (userBtn) userBtn.innerText = "User Center";

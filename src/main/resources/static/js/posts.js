@@ -65,6 +65,21 @@ function renderPost(templateHtml, post) {
     postEl.dataset.postId = post.id;
     postEl.onclick = () => navigateTo(`post/${post.id}`);
 
+    const deleteBtn = postEl.querySelector('.delete-btn');
+    const currentUser = document.body.dataset.currentUser;
+
+    if (deleteBtn) {
+        if (currentUser && post.username === currentUser) {
+            deleteBtn.style.display = 'block';
+            deleteBtn.onclick = (e) => {
+                e.stopPropagation();
+                deletePost(deleteBtn);
+            };
+        } else {
+            deleteBtn.style.display = 'none';
+        }
+    }
+
     const pic = post.profile_pic || '/img/default-avatar.png';
     postEl.querySelector('.post-img-target').src = pic;
     postEl.querySelector('.post-username-target').innerText = post.username;
@@ -260,5 +275,36 @@ async function submitShare(btn) {
         }
     } catch (e) {
         console.error("Share failed", e);
+    }
+}
+
+async function deletePost(btn) {
+    const postCard = btn.closest('.post-card');
+    const postId = postCard.dataset.postId;
+
+    if (!confirm("Are you sure you want to delete this post?")) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/posts/${postId}`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok) {
+            if (typeof showToast === 'function') showToast("Post deleted.", "success");
+
+            if (window.location.pathname.includes(`/post/${postId}`)) {
+                navigateTo('home');
+            } else {
+                const currentPath = window.location.pathname.substring(1) || 'home';
+                navigateTo(currentPath);
+            }
+        } else {
+            const error = await response.text();
+            if (typeof showToast === 'function') showToast(error, "error");
+        }
+    } catch (e) {
+        console.error("Delete failed", e);
     }
 }

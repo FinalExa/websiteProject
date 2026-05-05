@@ -10,6 +10,9 @@
         <textarea class="share-input" placeholder="Say something about this..."></textarea>
         <button class="submit-share-btn" onclick="submitShare(this)">Share</button>
     </div>
+    <button class="delete-btn" onclick="event.stopPropagation(); deletePost(this)">
+        <i class="fas fa-trash"></i>
+    </button>
 
     <div class="post-header">
         <img src="" class="post-avatar-small post-img-target">

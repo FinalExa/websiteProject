@@ -355,3 +355,16 @@
 .icon-btn:hover {
     background-color: #d8dadf;
 }
+
+.delete-btn {
+    display: none;
+    position: absolute;
+    top: 15px;
+    right: 45px;
+    background: none;
+    border: none;
+    color: #e74c3c;
+    cursor: pointer;
+    font-size: 1.1rem;
+    z-index: 10;
+}

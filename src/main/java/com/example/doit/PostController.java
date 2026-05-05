@@ -42,13 +42,22 @@ public class PostController {
 
     @GetMapping("/posts")
     @ResponseBody
-    public ResponseEntity<?> getPosts(HttpSession session) {
+    public ResponseEntity<?> getPosts(@RequestParam(required = false) String username, HttpSession session) {
         String currentUser = (String) session.getAttribute("user");
         if (currentUser == null) return ResponseEntity.status(401).build();
-        List<Map<String, Object>> posts = postRepository.findAllByOrderByDatePostedDesc().stream()
+
+        List<Post> posts;
+        if (username != null && !username.isEmpty()) {
+            posts = postRepository.findByAuthorUsernameOrderByDatePostedDesc(username);
+        } else {
+            posts = postRepository.findAllByOrderByDatePostedDesc();
+        }
+
+        List<Map<String, Object>> formattedPosts = posts.stream()
                 .map(post -> formatPost(post, currentUser))
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(posts);
+
+        return ResponseEntity.ok(formattedPosts);
     }
 
     @GetMapping("/posts/user/{username}")
@@ -245,5 +254,21 @@ public class PostController {
             registry.addResourceHandler("/img/user_posts/**")
                     .addResourceLocations("file:user_posts/");
         }
+    }
+
+    @DeleteMapping("/posts/{id}")
+    @ResponseBody
+    public ResponseEntity<?> deletePost(@PathVariable Long id, HttpSession session) {
+        String username = (String) session.getAttribute("user");
+        if (username == null) return ResponseEntity.status(401).build();
+
+        return postRepository.findById(id).map(post -> {
+            if (!post.getAuthor().getUsername().equals(username)) {
+                return ResponseEntity.status(403).body("You can only delete your own posts.");
+            }
+
+            postRepository.delete(post);
+            return ResponseEntity.ok(Map.of("status", "deleted"));
+        }).orElse(ResponseEntity.notFound().build());
     }
 }
