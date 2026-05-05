@@ -4,12 +4,15 @@ async function updateNavigation(forceData = null) {
 
         const loggedInNav = document.getElementById('logged-in-nav') || document.getElementById('loggedInNav');
         const userBtn = document.getElementById('btn-user');
+        const homeFeedBtn = document.getElementById('home-feed'); // Target the Home Feed button
 
         if (data.is_logged_in) {
             if (loggedInNav) loggedInNav.style.display = 'block';
+            if (homeFeedBtn) homeFeedBtn.style.display = 'block';
             if (userBtn) userBtn.innerText = "User Center";
         } else {
             if (loggedInNav) loggedInNav.style.display = 'none';
+            if (homeFeedBtn) homeFeedBtn.style.display = 'none';
             if (userBtn) userBtn.innerText = "Login";
         }
     } catch (error) {
@@ -24,7 +27,7 @@ async function navigateTo(pageName) {
     const authCheck = await fetch('/api/check-auth');
     const auth = await authCheck.json();
 
-    if (pageName === 'user_center' && !auth.is_logged_in) {
+    if (!auth.is_logged_in && pageName !== 'user') {
         pageName = 'user';
     }
 
