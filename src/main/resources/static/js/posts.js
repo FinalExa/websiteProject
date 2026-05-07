@@ -80,6 +80,12 @@ function renderPost(templateHtml, post) {
         }
     }
 
+    const editBtn = postEl.querySelector('.edit-btn');
+
+    if (editBtn && post.username === currentUser) {
+        editBtn.style.display = 'block';
+    }
+
     const pic = post.profile_pic || '/img/default-avatar.png';
     postEl.querySelector('.post-img-target').src = pic;
     postEl.querySelector('.post-username-target').innerText = post.username;
@@ -277,5 +283,51 @@ async function deletePost(btn) {
         }
     } catch (e) {
         console.error("Delete failed", e);
+    }
+}
+
+function startEdit(btn) {
+    const postCard = btn.closest('.post-card');
+    const textDisplay = postCard.querySelector('.post-text-target');
+    const editBox = postCard.querySelector('.edit-textbox');
+    const editInput = postCard.querySelector('.edit-input');
+
+    // Hide text, show textarea with current content
+    textDisplay.style.display = 'none';
+    editBox.style.display = 'block';
+    editInput.value = textDisplay.innerText;
+    editInput.focus();
+}
+
+function cancelEdit(btn) {
+    const postCard = btn.closest('.post-card');
+    postCard.querySelector('.post-text-target').style.display = 'block';
+    postCard.querySelector('.edit-textbox').style.display = 'none';
+}
+
+async function submitEdit(btn) {
+    const postCard = btn.closest('.post-card');
+    const postId = postCard.dataset.postId;
+    const newContent = postCard.querySelector('.edit-input').value;
+
+    try {
+        const response = await fetch(`/api/posts/${postId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content: newContent })
+        });
+
+        if (response.ok) {
+            if (typeof showToast === 'function') showToast("Post updated!", "success");
+
+            // Refresh the current view to show the new text
+            const currentPath = window.location.pathname.substring(1) || 'home';
+            navigateTo(currentPath);
+        } else {
+            const error = await response.text();
+            if (typeof showToast === 'function') showToast(error, "error");
+        }
+    } catch (e) {
+        console.error("Edit failed", e);
     }
 }

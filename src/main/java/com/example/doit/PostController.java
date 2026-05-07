@@ -271,4 +271,26 @@ public class PostController {
             return ResponseEntity.ok(Map.of("status", "deleted"));
         }).orElse(ResponseEntity.notFound().build());
     }
+
+    @PutMapping("/posts/{id}")
+    @ResponseBody
+    public ResponseEntity<?> updatePost(@PathVariable Long id, @RequestBody Map<String, String> payload, HttpSession session) {
+        String username = (String) session.getAttribute("user");
+        if (username == null) return ResponseEntity.status(401).build();
+
+        return postRepository.findById(id).map(post -> {
+            if (!post.getAuthor().getUsername().equals(username)) {
+                return ResponseEntity.status(403).body("You can only edit your own posts.");
+            }
+
+            String newContent = payload.get("content");
+            if (newContent == null || newContent.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Content cannot be empty.");
+            }
+
+            post.setContent(newContent);
+            postRepository.save(post);
+            return ResponseEntity.ok(formatPost(post, username));
+        }).orElse(ResponseEntity.notFound().build());
+    }
 }

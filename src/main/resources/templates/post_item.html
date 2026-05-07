@@ -2,17 +2,31 @@
     <span class="sharer-name-target"></span> has shared...
 </div>
 <div class="post-card" id="post-card-template">
-    <button class="share-btn" onclick="event.stopPropagation(); toggleShareBox(this)">
-        <i class="fas fa-share-square"></i>
-    </button>
-
+    
     <div class="share-textbox" style="display: none;" onclick="event.stopPropagation()">
         <textarea class="share-input" placeholder="Say something about this..."></textarea>
         <button class="submit-share-btn" onclick="submitShare(this)">Share</button>
     </div>
-    <button class="delete-btn" onclick="event.stopPropagation(); deletePost(this)">
-        <i class="fas fa-trash"></i>
-    </button>
+
+    <div class="post-admin-actions">
+        <button class="share-btn" onclick="event.stopPropagation(); toggleShareBox(this)">
+            <i class="fas fa-share-square"></i>
+        </button>
+        <button class="delete-btn" onclick="event.stopPropagation(); deletePost(this)">
+            <i class="fas fa-trash"></i>
+        </button>
+        <button class="edit-btn" style="display: none;" onclick="event.stopPropagation(); startEdit(this)">
+            <i class="fas fa-edit"></i>
+        </button>
+    </div>
+
+    <div class="edit-textbox" style="display: none;" onclick="event.stopPropagation()">
+        <textarea class="edit-input"></textarea>
+        <div class="edit-actions">
+            <button class="save-edit-btn" onclick="submitEdit(this)">Save</button>
+            <button class="cancel-edit-btn" onclick="cancelEdit(this)">Cancel</button>
+        </div>
+    </div>
 
     <div class="post-header">
         <img src="" class="post-avatar-small post-img-target">
