@@ -102,30 +102,6 @@ async function navigateTo(pageName) {
     }
 }
 
-async function loadPublicProfile(username) {
-    try {
-        const response = await fetch(`/api/user-info/${username}`);
-        if (response.ok) {
-            const data = await response.json();
-            const headerName = document.getElementById('profile-username-header');
-            const headerPic = document.getElementById('profile-avatar-header');
-            if (headerName) headerName.innerText = data.username;
-            if (headerPic) headerPic.src = data.profile_pic || '/img/default-avatar.png';
-        }
-    } catch (e) { console.error("Profile header error", e); }
-
-    loadPostsIntoContainer(`/api/posts?username=${username}`, 'user-posts-container');
-}
-
-async function loadUserCenterData() {
-    const res = await fetch('/api/data');
-    if (res.ok) {
-        const data = await res.json();
-        const pic = document.getElementById('display-profile-pic');
-        if (pic && data.profile_pic) pic.src = data.profile_pic + "?v=" + Date.now();
-    }
-}
-
 async function loadPostsIntoContainer(apiUrl, containerId) {
     const container = document.getElementById(containerId);
     if (!container) return;

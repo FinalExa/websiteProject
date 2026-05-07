@@ -201,35 +201,6 @@ async function loadPosts() {
     }
 }
 
-async function loadSinglePost(postId) {
-    const target = document.getElementById('single-post-target');
-    if (!target) return;
-
-    try {
-        const [response, templateReq] = await Promise.all([
-            fetch(`/api/posts/${postId}`),
-            fetch('/api/content/post-item')
-        ]);
-
-        if (response.ok && templateReq.ok) {
-            const post = await response.json();
-            const templateHtml = await templateReq.text();
-            target.innerHTML = '';
-
-            const postWrapper = renderPost(templateHtml, post);
-            const postCard = postWrapper.querySelector('.post-card');
-            postCard.onclick = null;
-            postCard.style.cursor = 'default';
-            target.appendChild(postWrapper);
-
-            const commentBtn = postCard.querySelector('.comment-toggle-btn');
-            if (commentBtn) toggleComments(commentBtn);
-        }
-    } catch (error) {
-        console.error("Failed to load single post:", error);
-    }
-}
-
 async function handleVote(postId, type, upSpan, downSpan, clickedBtn) {
     try {
         const response = await fetch(`/api/posts/${postId}/vote?type=${type}`, { method: 'POST' });
