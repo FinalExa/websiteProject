@@ -42,12 +42,12 @@ main {
 
 .nav-container {
     width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
+    max-width: 100%;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 20px;
+    padding: 0 40px;
+    box-sizing: border-box;
 }
 
 .nav-btn {
@@ -74,7 +74,11 @@ main {
     align-items: center;
 }
 
-.nav-section.left { justify-content: flex-start; }
+.nav-section.left {
+    justify-content: flex-start;
+    gap: 15px;
+}
+
 .nav-section.center { justify-content: center; }
 .nav-section.right { justify-content: flex-end; }
 
@@ -86,10 +90,15 @@ main {
     font-weight: 700;
     letter-spacing: 1px;
     transition: opacity 0.2s;
+    user-select: none;
 }
 
 .nav-logo:hover {
     opacity: 0.8;
+}
+
+.nav-logo:active {
+    transform: scale(0.95);
 }
 
 #logged-in-nav {
@@ -153,20 +162,19 @@ main {
     overflow-wrap: break-word;
 }
 
-#clock {
-    font-size: 3rem;
+.nav-clock {
+    color: #ecf0f1;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9rem;
+    opacity: 0.9;
     font-weight: bold;
-    color: #3498db;
-}
-
-.clock-container {
-    background: white;
-    padding: 1.5rem 3rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    margin-left: 0;
+    padding: 4px 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    letter-spacing: 1px;
+    min-width: 80px;
     text-align: center;
-    width: fit-content;
-    margin-bottom: 20px;
 }
 
 .home-feed-container {

@@ -1,5 +1,5 @@
 function updateClock() {
-	const clockElement = document.getElementById('clock');
+	const clockElement = document.getElementById('nav-clock');
 	if (!clockElement) return;
 	
     const now = new Date();

@@ -4,19 +4,16 @@ async function updateNavigation(forceData = null) {
 
         const loggedInNav = document.getElementById('logged-in-nav') || document.getElementById('loggedInNav');
         const userBtn = document.getElementById('btn-user');
-        const homeFeedBtn = document.getElementById('home-feed');
 
         if (data.is_logged_in) {
             document.body.dataset.currentUser = data.user;
             if (loggedInNav) loggedInNav.style.display = 'block';
-            if (homeFeedBtn) homeFeedBtn.style.display = 'block';
             if (userBtn) {
                 userBtn.title = "User Center";
                 userBtn.innerHTML = "<i class=\"fas fa-cog\"></i>"
             }
         } else {
             if (loggedInNav) loggedInNav.style.display = 'none';
-            if (homeFeedBtn) homeFeedBtn.style.display = 'none';
             if (userBtn) {
                 userBtn.title = "Login";
                 userBtn.innerHTML = "<i id=\"user-btn-icon\" class=\"fas fa-sign-in-alt\"></i>"
