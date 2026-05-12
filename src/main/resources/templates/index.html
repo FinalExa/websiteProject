@@ -3,7 +3,7 @@
 	<head>
 		<base href="/">
 		<meta charset="UTF-8">
-		<title>John Website</title>
+		<title>Do.It!</title>
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 		<link rel="stylesheet" th:href="@{/css/style.css}">
 		<link rel="stylesheet" th:href="@{/css/auth.css}">
@@ -12,32 +12,27 @@
 		<link rel="stylesheet" th:href="@{/css/posts.css}">
 	</head>
 	<body>
-		<header>
-			<h1 onclick="navigateTo('home')" style="cursor: pointer;">John Website</h1>
-		</header>
 		<nav class="navbar">
 			<div class="nav-container">
 				<div class="nav-section left">
 					<div id="logged-in-nav" style="display: none;">
-						<button class="nav-btn" onclick="goToMyPublicProfile()">My Profile</button>
+						<button class="nav-icon-btn" onclick="goToMyPublicProfile()" title="My Profile">
+							<i class="fas fa-user-circle"></i>
+						</button>
 					</div>
 				</div>
 
 				<div class="nav-section center">
-					<button class="nav-btn" id ="home-feed" onclick="navigateTo('home')">Home Feed</button>
+					<h1 class="nav-logo" onclick="navigateTo('home')">Do.It!</h1>
 				</div>
 
 				<div class="nav-section right">
-					<div class="user-container">
-						<button class="nav-btn" id="btn-user">User Center</button>
-					</div>
+					<button class="nav-icon-btn" id="btn-user" title="User Center"></button>
 				</div>
 			</div>
 		</nav>
 
 		<main id="main-content"></main>
-
-		<footer>John Website</footer>
 		
 		<script th:src="@{/js/toast.js}"></script>
 		<script th:src="@{/js/clock.js}"></script>
