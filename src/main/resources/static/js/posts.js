@@ -168,18 +168,31 @@ function renderPost(templateHtml, post) {
 
 function previewPostImage(input) {
     const container = document.getElementById('post-image-preview-container');
-    const img = document.getElementById('post-image-preview');
+    const previewImg = document.getElementById('post-image-preview');
 
     if (input.files && input.files[0]) {
         const reader = new FileReader();
         reader.onload = function(e) {
-            img.src = e.target.result;
+            previewImg.src = e.target.result;
             container.style.display = 'block';
-        }
+        };
         reader.readAsDataURL(input.files[0]);
     } else {
+        previewImg.src = '';
         container.style.display = 'none';
     }
+}
+
+function clearPostImagePreview(event) {
+    if (event) event.stopPropagation();
+
+    const fileInput = document.getElementById('post-image-file');
+    const container = document.getElementById('post-image-preview-container');
+    const previewImg = document.getElementById('post-image-preview');
+
+    if (fileInput) fileInput.value = '';
+    if (previewImg) previewImg.src = '';
+    if (container) container.style.display = 'none';
 }
 
 async function loadPosts() {
@@ -292,7 +305,6 @@ function startEdit(btn) {
     const editBox = postCard.querySelector('.edit-textbox');
     const editInput = postCard.querySelector('.edit-input');
 
-    // Hide text, show textarea with current content
     textDisplay.style.display = 'none';
     editBox.style.display = 'block';
     editInput.value = textDisplay.innerText;
@@ -320,7 +332,6 @@ async function submitEdit(btn) {
         if (response.ok) {
             if (typeof showToast === 'function') showToast("Post updated!", "success");
 
-            // Refresh the current view to show the new text
             const currentPath = window.location.pathname.substring(1) || 'home';
             navigateTo(currentPath);
         } else {
@@ -329,5 +340,52 @@ async function submitEdit(btn) {
         }
     } catch (e) {
         console.error("Edit failed", e);
+    }
+}
+
+function handleDragOver(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const dropZone = document.getElementById('drop-zone');
+    if (dropZone) {
+        dropZone.classList.add('drag-active');
+    }
+}
+
+function handleDragLeave(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const dropZone = document.getElementById('drop-zone');
+    if (dropZone) {
+        dropZone.classList.remove('drag-active');
+    }
+}
+
+function handleDrop(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const dropZone = document.getElementById('drop-zone');
+    if (dropZone) {
+        dropZone.classList.remove('drag-active');
+    }
+
+    const dt = event.dataTransfer;
+    const files = dt.files;
+
+    if (files && files.length > 0) {
+        const fileInput = document.getElementById('post-image-file');
+
+        if (files[0].type.startsWith('image/')) {
+            fileInput.files = files;
+
+            previewPostImage(fileInput);
+        } else {
+            if (typeof showToast === 'function') {
+                showToast("Only image files are supported here!", "error");
+            }
+        }
     }
 }
