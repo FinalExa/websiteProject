@@ -80,7 +80,11 @@ main {
 }
 
 .nav-section.center { justify-content: center; }
-.nav-section.right { justify-content: flex-end; }
+
+.nav-section.right {
+    justify-content: flex-end;
+    gap: 15px;
+}
 
 .nav-logo {
     color: white;

@@ -8,6 +8,9 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.example.doit.NotificationService;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,6 +29,9 @@ public class PostController {
     private final UserRepository userRepository;
     private final VoteRepository voteRepository;
     private final CommentRepository commentRepository;
+
+    @Autowired
+    private NotificationService notificationService;
 
     public PostController(PostRepository postRepository, UserRepository userRepository,
                           VoteRepository voteRepository, CommentRepository commentRepository) {
@@ -182,15 +188,55 @@ public class PostController {
     @PostMapping("/posts/{id}/comment")
     @ResponseBody
     public ResponseEntity<?> addComment(@PathVariable Long id, @RequestBody Map<String, String> data, HttpSession session) {
-        String username = (String) session.getAttribute("user");
-        if (username == null) return ResponseEntity.status(401).build();
+        Object userObj = session.getAttribute("user");
+        if (userObj == null) return ResponseEntity.status(401).build();
+
+        String username;
+        if (userObj instanceof String) {
+            username = (String) userObj;
+        } else {
+            try {
+                username = (String) userObj.getClass().getMethod("getUsername").invoke(userObj);
+            } catch (Exception e) {
+                username = userObj.toString();
+            }
+        }
+
+        final String finalUsername = username;
         return postRepository.findById(id).map(post -> {
-            User user = userRepository.findByUsername(username).orElse(null);
+            User user = userRepository.findByUsername(finalUsername).orElse(null);
+
             Comment comment = new Comment();
             comment.setContent(data.get("content"));
             comment.setAuthor(user);
             comment.setPost(post);
             commentRepository.save(comment);
+
+            if (post.getAuthor() != null) {
+                String postAuthor = post.getAuthor().getUsername();
+                String commentTextSnippet = comment.getContent();
+
+                if (commentTextSnippet != null && commentTextSnippet.length() > 60) {
+                    commentTextSnippet = commentTextSnippet.substring(0, 57) + "...";
+                }
+
+                String avatarUrl = "/img/default-avatar.png";
+                if (user != null && user.getProfilePicPath() != null && !user.getProfilePicPath().isEmpty()) {
+                    String cleanPath = user.getProfilePicPath();
+                    avatarUrl = cleanPath.startsWith("/") ? cleanPath : "/" + cleanPath;
+                }
+
+                String targetUrl = "/posts/" + post.getId();
+
+                notificationService.createNotification(
+                        postAuthor,
+                        finalUsername,
+                        commentTextSnippet,
+                        targetUrl,
+                        avatarUrl
+                );
+            }
+
             return ResponseEntity.ok(Map.of("status", "success"));
         }).orElse(ResponseEntity.notFound().build());
     }
@@ -274,7 +320,7 @@ public class PostController {
 
     @PutMapping("/posts/{id}")
     @ResponseBody
-    public ResponseEntity<?> updatePost(@PathVariable Long id, @RequestBody Map<String, String> payload, HttpSession session) {
+        public ResponseEntity<?> updatePost(@PathVariable Long id, @RequestBody Map<String, String> payload, HttpSession session) {
         String username = (String) session.getAttribute("user");
         if (username == null) return ResponseEntity.status(401).build();
 

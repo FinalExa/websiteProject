@@ -10,7 +10,6 @@ public class ContentController {
 
     @GetMapping("/comment-item")
     public String getCommentTemplate() {
-        // This looks for src/main/resources/templates/comment_item.html
         return "comment_item";
     }
 }
