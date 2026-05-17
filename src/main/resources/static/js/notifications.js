@@ -41,6 +41,10 @@ async function loadUserNotifications() {
         const notifications = await dataResponse.json();
 
         if (notifications.length === 0) {
+            const emptyTemplateResponse = await fetch('/api/content/notification-empty');
+            if (emptyTemplateResponse.ok) {
+                listContainer.innerHTML = await emptyTemplateResponse.text();
+            }
             return;
         }
 
@@ -52,19 +56,18 @@ async function loadUserNotifications() {
 
         notifications.forEach(notif => {
             let itemHtml = itemTemplateHtml
-                .replace('{id}', notif.id)
-                .replace('{username}', notif.commenter)
-                .replace('{comment-text}', notif.commentText)
-                .replace('{time-ago}', formatTimeAgo(notif.createdAt))
-                .replace('{unread-class}', notif.read ? '' : 'unread')
-                .replace('{target-url}', notif.targetUrl)
-                .replace('{avatar-url}', notif.commenterAvatarUrl || '/img/default-avatar.png'); // Use dynamic DB string
+                .replace(/{id}/g, notif.id)
+                .replace(/{username}/g, notif.commenter)
+                .replace(/{comment-text}/g, notif.commentText)
+                .replace(/{time-ago}/g, formatTimeAgo(notif.createdAt))
+                .replace(/{unread-class}/g, notif.read ? '' : 'unread')
+                .replace(/{target-url}/g, notif.targetUrl)
+                .replace(/{avatar-url}/g, notif.commenterAvatarUrl || '/img/default-avatar.png');
 
             listContainer.insertAdjacentHTML('beforeend', itemHtml);
         });
-
     } catch (error) {
-        console.error("Error populating real-time notification data streams:", error);
+        console.error("Error running user notification view renderer:", error);
     }
 }
 
@@ -74,17 +77,17 @@ async function updateNotificationBadge() {
 
     try {
         const response = await fetch('/api/notifications/unread-count');
-        if (response.ok) {
-            const data = await response.json();
-            if (data.count > 0) {
-                badge.innerText = data.count;
-                badge.style.display = 'flex';
-            } else {
-                badge.style.display = 'none';
-            }
+        if (!response.ok) return;
+        const data = await response.json();
+
+        if (data.count > 0) {
+            badge.textContent = data.count;
+            badge.style.display = 'inline-block';
+        } else {
+            badge.style.display = 'none';
         }
     } catch (error) {
-        console.error("Failed to update unread indicator counts:", error);
+        console.error("Error requesting update to application badge count runtime:", error);
     }
 }
 
@@ -93,19 +96,17 @@ async function handleNotificationClick(targetUrl, notificationId) {
         await fetch(`/api/notifications/${notificationId}/read`, { method: 'PUT' });
 
         const dropdown = document.getElementById('notification-dropdown');
-        if (dropdown) dropdown.style.display = 'none';
+        if (dropdown) {
+            dropdown.style.display = 'none';
+        }
 
         if (typeof navigateTo === 'function') {
-            try {
-                navigateTo(targetUrl);
-            } catch (err) {
-                window.location.href = targetUrl;
-            }
+            navigateTo(targetUrl);
         } else {
-            window.location.href = targetUrl;
+            window.location.href = '/' + targetUrl;
         }
     } catch (error) {
-        console.error("Error resolving notification read state:", error);
+        console.error("Error executing notification redirection sequence:", error);
     }
 }
 
@@ -139,6 +140,7 @@ function formatTimeAgo(dateTimeString) {
 window.addEventListener('click', (event) => {
     const dropdown = document.getElementById('notification-dropdown');
     const bellButton = document.getElementById('btn-notifications');
+
     if (dropdown && dropdown.style.display !== 'none') {
         if (!dropdown.contains(event.target) && !bellButton.contains(event.target)) {
             dropdown.style.display = 'none';

@@ -10,8 +10,6 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.example.doit.NotificationService;
-
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -44,6 +42,11 @@ public class PostController {
     @GetMapping("/content/user_profile_public")
     public String getProfileTemplate() {
         return "user_profile_public";
+    }
+
+    @GetMapping("/content/post/{id}")
+    public String getSinglePostTemplate() {
+        return "post_view";
     }
 
     @GetMapping("/posts")
@@ -226,7 +229,7 @@ public class PostController {
                     avatarUrl = cleanPath.startsWith("/") ? cleanPath : "/" + cleanPath;
                 }
 
-                String targetUrl = "/posts/" + post.getId();
+                String targetUrl = "post/" + post.getId();
 
                 notificationService.createNotification(
                         postAuthor,
@@ -320,7 +323,7 @@ public class PostController {
 
     @PutMapping("/posts/{id}")
     @ResponseBody
-        public ResponseEntity<?> updatePost(@PathVariable Long id, @RequestBody Map<String, String> payload, HttpSession session) {
+    public ResponseEntity<?> updatePost(@PathVariable Long id, @RequestBody Map<String, String> payload, HttpSession session) {
         String username = (String) session.getAttribute("user");
         if (username == null) return ResponseEntity.status(401).build();
 
