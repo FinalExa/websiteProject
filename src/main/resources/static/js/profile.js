@@ -3,17 +3,21 @@ async function loadProfilePosts(username) {
     if (!container) return;
 
     try {
-        const [postsReq, templateReq] = await Promise.all([
-            fetch(`${window.APP_CONFIG.BACKEND_URL}/api/posts?username=${username}`),
-            fetch('${window.APP_CONFIG.BACKEND_URL}/api/content/post-item')
-        ]);
+        const response = await fetch(`${window.APP_CONFIG.BACKEND_URL}/api/posts?username=${username}`);
+        if (!response.ok) throw new Error("Could not fetch profile feed posts.");
 
-        const posts = await postsReq.json();
-        const templateHtml = await templateReq.text();
-
+        const posts = await response.json();
         container.innerHTML = '';
+
+        if (posts.length === 0) {
+            container.innerHTML = '<p class="no-posts-msg">No posts shared yet.</p>';
+            return;
+        }
+
+        const postCardTemplate = document.getElementById('post-card-template')?.outerHTML || '';
+
         posts.forEach(post => {
-            const postEl = renderPost(templateHtml, post);
+            const postEl = renderPost(postCardTemplate, post);
             container.appendChild(postEl);
         });
     } catch (e) {
@@ -32,7 +36,7 @@ async function uploadPic() {
     formData.append('file', fileInput.files[0]);
 
     try {
-        const response = await fetch('${window.APP_CONFIG.BACKEND_URL}/api/upload-profile-pic', {
+        const response = await fetch(`${window.APP_CONFIG.BACKEND_URL}/api/upload-profile-pic`, {
             method: 'POST',
             body: formData
         });
@@ -42,7 +46,7 @@ async function uploadPic() {
             showToast(result.message, "success");
             const currentAvatar = document.querySelector('.current-avatar');
             if (currentAvatar && result.newPath) {
-                currentAvatar.src = result.newPath + '?t=' + new Date().getTime();
+                currentAvatar.src = `${window.APP_CONFIG.BACKEND_URL}${result.newPath}?t=${new Date().getTime()}`;
             }
         } else {
             showToast(result.message, "error");

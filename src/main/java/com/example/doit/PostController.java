@@ -3,7 +3,6 @@ package com.example.doit;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
@@ -19,8 +18,9 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 
-@Controller
+@RestController
 @RequestMapping("/api")
+@CrossOrigin(origins = "*")
 public class PostController {
 
     private final PostRepository postRepository;
@@ -39,18 +39,7 @@ public class PostController {
         this.commentRepository = commentRepository;
     }
 
-    @GetMapping("/content/user_profile_public")
-    public String getProfileTemplate() {
-        return "user_profile_public";
-    }
-
-    @GetMapping("/content/post/{id}")
-    public String getSinglePostTemplate() {
-        return "post_view";
-    }
-
     @GetMapping("/posts")
-    @ResponseBody
     public ResponseEntity<?> getPosts(@RequestParam(required = false) String username, HttpSession session) {
         String currentUser = (String) session.getAttribute("user");
         if (currentUser == null) return ResponseEntity.status(401).build();
@@ -70,7 +59,6 @@ public class PostController {
     }
 
     @GetMapping("/posts/user/{username}")
-    @ResponseBody
     public ResponseEntity<?> getUserPosts(@PathVariable String username, HttpSession session) {
         String currentUser = (String) session.getAttribute("user");
         if (currentUser == null) return ResponseEntity.status(401).build();
@@ -109,7 +97,6 @@ public class PostController {
     }
 
     @PostMapping(value = "/posts", consumes = {"multipart/form-data"})
-    @ResponseBody
     public ResponseEntity<?> createPost(
             @RequestParam(value = "content", required = false) String content,
             @RequestParam(value = "file", required = false) MultipartFile file,
@@ -152,7 +139,6 @@ public class PostController {
     }
 
     @PostMapping("/posts/{id}/vote")
-    @ResponseBody
     public ResponseEntity<?> vote(@PathVariable Long id, @RequestParam String type, HttpSession session) {
         String username = (String) session.getAttribute("user");
         if (username == null) return ResponseEntity.status(401).build();
@@ -189,7 +175,6 @@ public class PostController {
     }
 
     @PostMapping("/posts/{id}/comment")
-    @ResponseBody
     public ResponseEntity<?> addComment(@PathVariable Long id, @RequestBody Map<String, String> data, HttpSession session) {
         Object userObj = session.getAttribute("user");
         if (userObj == null) return ResponseEntity.status(401).build();
@@ -245,7 +230,6 @@ public class PostController {
     }
 
     @GetMapping("/posts/{id}/comments")
-    @ResponseBody
     public ResponseEntity<List<Map<String, Object>>> getComments(@PathVariable Long id) {
         List<Map<String, Object>> comments = commentRepository.findByPostIdOrderByDatePostedAsc(id).stream()
                 .map(comment -> {
@@ -261,7 +245,6 @@ public class PostController {
     }
 
     @GetMapping("/posts/{id}")
-    @ResponseBody
     public ResponseEntity<?> getSinglePost(@PathVariable Long id, HttpSession session) {
         String currentUser = (String) session.getAttribute("user");
         if (currentUser == null) return ResponseEntity.status(401).build();
@@ -306,7 +289,6 @@ public class PostController {
     }
 
     @DeleteMapping("/posts/{id}")
-    @ResponseBody
     public ResponseEntity<?> deletePost(@PathVariable Long id, HttpSession session) {
         String username = (String) session.getAttribute("user");
         if (username == null) return ResponseEntity.status(401).build();
@@ -322,7 +304,6 @@ public class PostController {
     }
 
     @PutMapping("/posts/{id}")
-    @ResponseBody
     public ResponseEntity<?> updatePost(@PathVariable Long id, @RequestBody Map<String, String> payload, HttpSession session) {
         String username = (String) session.getAttribute("user");
         if (username == null) return ResponseEntity.status(401).build();

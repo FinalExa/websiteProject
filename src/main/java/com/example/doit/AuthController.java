@@ -1,8 +1,11 @@
 package com.example.doit;
 
 import jakarta.servlet.http.HttpSession;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.net.URI;
 import java.util.Map;
 
 @RestController
@@ -42,7 +45,6 @@ public class AuthController {
             }
 
             User user = userService.registerUser(username, email, password);
-
             emailService.sendVerificationEmail(user.getEmail(), user.getUsername());
 
             return ResponseEntity.ok(Map.of("status", "success", "message", "Check your email to verify!"));
@@ -56,13 +58,15 @@ public class AuthController {
         return userService.login(data.get("username"), data.get("password"))
                 .map(user -> {
                     if (!user.isVerified()) {
-                        return ResponseEntity.status(403).body(Map.of("status", "error", "message", "Verify your email first."));
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                                .body(Map.of("status", "error", "message", "Verify your email first."));
                     }
 
                     session.setAttribute("user", user.getUsername());
                     return ResponseEntity.ok(Map.of("status", "success", "message", "Logged in successfully!"));
                 })
-                .orElse(ResponseEntity.status(401).body(Map.of("status", "error", "message", "Invalid credentials")));
+                .orElse(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("status", "error", "message", "Invalid credentials")));
     }
 
     @PostMapping("/logout")
@@ -78,15 +82,18 @@ public class AuthController {
     }
 
     @GetMapping("/verify/{token}")
-    @ResponseBody
-    public String verifyAccount(@PathVariable String token) {
-        return userRepository.findByUsername(token).map(user -> {
-            if (user.isVerified()) {
-                return "<h1>Account already verified!</h1><p><a href='/'>Go to Login</a></p>";
+    public ResponseEntity<Void> verifyAccount(@PathVariable String token) {
+        String frontendLoginUrl = "https://your-portfolio-name.vercel.app/login.html";
+
+        userRepository.findByUsername(token).ifPresent(user -> {
+            if (!user.isVerified()) {
+                user.setVerified(true);
+                userRepository.save(user);
             }
-            user.setVerified(true);
-            userRepository.save(user);
-            return "<h1>Verified! You can now log in.</h1><p><a href='/'>Go to Login</a></p>";
-        }).orElse("<h1>Invalid or expired link.</h1>");
+        });
+
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .location(URI.create(frontendLoginUrl))
+                .build();
     }
 }

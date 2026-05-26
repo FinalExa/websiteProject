@@ -4,6 +4,10 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
@@ -11,10 +15,12 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
+@CrossOrigin(origins = "*")
 public class ProfileController {
 
     private final UserRepository userRepository;
-    private final String UPLOAD_DIR = "src/main/resources/static/img/profile_pictures/";
+
+    private final String UPLOAD_DIR = System.getProperty("user.dir") + "/profile_pictures/";
 
     public ProfileController(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -78,5 +84,14 @@ public class ProfileController {
                     "profile_pic", "/" + pic
             ));
         }).orElse(ResponseEntity.notFound().build());
+    }
+
+    @Configuration
+    public class ProfileWebConfig implements WebMvcConfigurer {
+        @Override
+        public void addResourceHandlers(ResourceHandlerRegistry registry) {
+            registry.addResourceHandler("/img/profile_pictures/**")
+                    .addResourceLocations("file:profile_pictures/");
+        }
     }
 }

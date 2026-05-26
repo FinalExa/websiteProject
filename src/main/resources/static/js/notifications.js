@@ -1,4 +1,6 @@
-let isDropdownTemplateLoaded = false;
+let cachedDropdownHtml = null;
+let cachedEmptyHtml = null;
+let cachedItemHtml = null;
 
 document.addEventListener("DOMContentLoaded", () => {
     updateNotificationBadge();
@@ -11,19 +13,23 @@ async function toggleNotificationDropdown(event) {
     const dropdown = document.getElementById('notification-dropdown');
     if (!dropdown) return;
 
-    if (dropdown.style.display === 'none' && !isDropdownTemplateLoaded) {
-        try {
-            const response = await fetch('${window.APP_CONFIG.BACKEND_URL}/api/content/notification-dropdown');
-            if (response.ok) {
-                dropdown.innerHTML = await response.text();
-                isDropdownTemplateLoaded = true;
-            }
-        } catch (error) {
-            console.error("Error setting up dropdown skeleton:", error);
-        }
-    }
-
     if (dropdown.style.display === 'none') {
+        if (!cachedDropdownHtml) {
+            try {
+                // Adjust this matching folder layout destination inside Vercel
+                const response = await fetch('/templates/notification_dropdown.html');
+                if (response.ok) {
+                    cachedDropdownHtml = await response.text();
+                }
+            } catch (error) {
+                console.error("Error setting up dropdown skeleton:", error);
+            }
+        }
+
+        if (cachedDropdownHtml) {
+            dropdown.innerHTML = cachedDropdownHtml;
+        }
+
         dropdown.style.display = 'flex';
         await loadUserNotifications();
     } else {
@@ -36,26 +42,29 @@ async function loadUserNotifications() {
     if (!listContainer) return;
 
     try {
-        const dataResponse = await fetch('${window.APP_CONFIG.BACKEND_URL}/api/notifications');
+        const dataResponse = await fetch(`${window.APP_CONFIG.BACKEND_URL}/api/notifications`);
         if (!dataResponse.ok) return;
         const notifications = await dataResponse.json();
 
         if (notifications.length === 0) {
-            const emptyTemplateResponse = await fetch('${window.APP_CONFIG.BACKEND_URL}/api/content/notification-empty');
-            if (emptyTemplateResponse.ok) {
-                listContainer.innerHTML = await emptyTemplateResponse.text();
+            if (!cachedEmptyHtml) {
+                const emptyResponse = await fetch('/templates/notification_empty.html');
+                if (emptyResponse.ok) cachedEmptyHtml = await emptyResponse.text();
             }
+            if (cachedEmptyHtml) listContainer.innerHTML = cachedEmptyHtml;
             return;
         }
 
-        const itemTemplateResponse = await fetch('${window.APP_CONFIG.BACKEND_URL}/api/content/notification-item');
-        if (!itemTemplateResponse.ok) return;
-        const itemTemplateHtml = await itemTemplateResponse.text();
+        if (!cachedItemHtml) {
+            const itemResponse = await fetch('/templates/notification_item.html');
+            if (itemResponse.ok) cachedItemHtml = await itemResponse.text();
+        }
 
+        if (!cachedItemHtml) return;
         listContainer.innerHTML = '';
 
         notifications.forEach(notif => {
-            let itemHtml = itemTemplateHtml
+            let itemHtml = cachedItemHtml
                 .replace(/{id}/g, notif.id)
                 .replace(/{username}/g, notif.commenter)
                 .replace(/{comment-text}/g, notif.commentText)
@@ -76,7 +85,7 @@ async function updateNotificationBadge() {
     if (!badge) return;
 
     try {
-        const response = await fetch('${window.APP_CONFIG.BACKEND_URL}/api/notifications/unread-count');
+        const response = await fetch(`${window.APP_CONFIG.BACKEND_URL}/api/notifications/unread-count`);
         if (!response.ok) return;
         const data = await response.json();
 
@@ -113,7 +122,7 @@ async function handleNotificationClick(targetUrl, notificationId) {
 async function markAllNotificationsRead(event) {
     if (event) event.stopPropagation();
     try {
-        const response = await fetch('${window.APP_CONFIG.BACKEND_URL}/api/notifications/mark-all-read', { method: 'POST' });
+        const response = await fetch(`${window.APP_CONFIG.BACKEND_URL}/api/notifications/mark-all-read`, { method: 'POST' });
         if (response.ok) {
             updateNotificationBadge();
             loadUserNotifications();
