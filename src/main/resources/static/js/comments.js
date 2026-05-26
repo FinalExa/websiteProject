@@ -19,8 +19,8 @@ async function loadComments(postId, container) {
 
     try {
         const [response, templateReq] = await Promise.all([
-            fetch(`/api/posts/${postId}/comments`),
-            fetch('/api/content/comment-item')
+            fetch(`${window.APP_CONFIG.BACKEND_URL}/api/posts/${postId}/comments`),
+            fetch('${window.APP_CONFIG.BACKEND_URL}/api/content/comment-item')
         ]);
 
         if (response.ok && templateReq.ok) {
@@ -69,7 +69,7 @@ async function submitComment(btn) {
     if (!input.value.trim() || !postId) return;
 
     try {
-        const response = await fetch(`/api/posts/${postId}/comment`, {
+        const response = await fetch(`${window.APP_CONFIG.BACKEND_URL}/api/posts/${postId}/comment`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ content: input.value })

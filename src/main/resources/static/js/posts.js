@@ -24,7 +24,7 @@ async function submitPost() {
     }
 
     try {
-        const response = await fetch('/api/posts', {
+        const response = await fetch('${window.APP_CONFIG.BACKEND_URL}/api/posts', {
             method: 'POST',
             body: formData
         });
@@ -201,8 +201,8 @@ async function loadPosts() {
 
     try {
         const [response, templateReq] = await Promise.all([
-            fetch('/api/posts'),
-            fetch('/api/content/post-item')
+            fetch('${window.APP_CONFIG.BACKEND_URL}/api/posts'),
+            fetch('${window.APP_CONFIG.BACKEND_URL}/api/content/post-item')
         ]);
 
         if (response.ok && templateReq.ok) {
@@ -222,7 +222,7 @@ async function loadPosts() {
 
 async function handleVote(postId, type, upSpan, downSpan, clickedBtn) {
     try {
-        const response = await fetch(`/api/posts/${postId}/vote?type=${type}`, { method: 'POST' });
+        const response = await fetch(`${window.APP_CONFIG.BACKEND_URL}/api/posts/${postId}/vote?type=${type}`, { method: 'POST' });
         if (response.ok) {
             const data = await response.json();
             upSpan.innerText = data.upvotes;
@@ -250,7 +250,7 @@ async function submitShare(btn) {
     const caption = postCard.querySelector('.share-input').value;
 
     try {
-        const response = await fetch(`/api/posts/${postId}/share`, {
+        const response = await fetch(`${window.APP_CONFIG.BACKEND_URL}/api/posts/${postId}/share`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ content: caption })
@@ -277,7 +277,7 @@ async function deletePost(btn) {
     }
 
     try {
-        const response = await fetch(`/api/posts/${postId}`, {
+        const response = await fetch(`${window.APP_CONFIG.BACKEND_URL}/api/posts/${postId}`, {
             method: 'DELETE'
         });
 
@@ -323,7 +323,7 @@ async function submitEdit(btn) {
     const newContent = postCard.querySelector('.edit-input').value;
 
     try {
-        const response = await fetch(`/api/posts/${postId}`, {
+        const response = await fetch(`${window.APP_CONFIG.BACKEND_URL}/api/posts/${postId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ content: newContent })

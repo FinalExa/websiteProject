@@ -17,7 +17,7 @@ updateClock();
 setInterval(updateClock, 1000);
 
 async function getBackendMessage() {
-    const response = await fetch('/api/data');
+    const response = await fetch('${window.APP_CONFIG.BACKEND_URL}/api/data');
     const data = await response.json();
 }
 

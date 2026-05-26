@@ -1,6 +1,6 @@
 async function updateNavigation(forceData = null) {
     try {
-        const data = forceData || await (await fetch('/api/check-auth')).json();
+        const data = forceData || await (await fetch('${window.APP_CONFIG.BACKEND_URL}/api/check-auth')).json();
 
         const loggedInNav = document.getElementById('logged-in-nav') || document.getElementById('loggedInNav');
         const userBtn = document.getElementById('btn-user');
@@ -28,7 +28,7 @@ async function navigateTo(pageName) {
     const main = document.getElementById('main-content');
     if (!main) return;
 
-    const authCheck = await fetch('/api/check-auth');
+    const authCheck = await fetch('${window.APP_CONFIG.BACKEND_URL}/api/check-auth');
     const auth = await authCheck.json();
 
     if (!auth.is_logged_in && pageName !== 'user') {
@@ -41,7 +41,7 @@ async function navigateTo(pageName) {
     }
 
     try {
-        const response = await fetch(`/api/content/${pageName}`);
+        const response = await fetch(`${window.APP_CONFIG.BACKEND_URL}/api/content/${pageName}`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const html = await response.text();
 
@@ -53,7 +53,7 @@ async function navigateTo(pageName) {
         }
 
         if (pageName === 'user_center') {
-            fetch('/api/data').then(res => res.json()).then(data => {
+            fetch('${window.APP_CONFIG.BACKEND_URL}/api/data').then(res => res.json()).then(data => {
                 const userField = document.getElementById('display-username');
                 const picField = document.getElementById('display-profile-pic');
                 if (userField) userField.innerText = data.user;
@@ -65,7 +65,7 @@ async function navigateTo(pageName) {
         }
         else if (pageName.includes('profile/')) {
             const username = pageName.split('/').pop();
-            fetch(`/api/user-info/${username}`).then(res => res.json()).then(data => {
+            fetch(`${window.APP_CONFIG.BACKEND_URL}/api/user-info/${username}`).then(res => res.json()).then(data => {
                 const nameHeader = document.getElementById('profile-username-header');
                 const picHeader = document.getElementById('profile-avatar-header');
                 if (nameHeader) nameHeader.innerText = data.username;
@@ -81,8 +81,8 @@ async function navigateTo(pageName) {
             if (container) {
                 try {
                     const [postRes, templateRes] = await Promise.all([
-                        fetch(`/api/posts/${postId}`),
-                        fetch('/api/content/post-item')
+                        fetch(`${window.APP_CONFIG.BACKEND_URL}/api/posts/${postId}`),
+                        fetch('${window.APP_CONFIG.BACKEND_URL}/api/content/post-item')
                     ]);
 
                     const postData = await postRes.json();
@@ -111,7 +111,7 @@ async function loadPostsIntoContainer(apiUrl, containerId) {
     try {
         const [postsReq, templateReq] = await Promise.all([
             fetch(apiUrl),
-            fetch('/api/content/post-item')
+            fetch('${window.APP_CONFIG.BACKEND_URL}/api/content/post-item')
         ]);
         const posts = await postsReq.json();
         const templateHtml = await templateReq.text();
@@ -123,11 +123,11 @@ async function loadPostsIntoContainer(apiUrl, containerId) {
 }
 
 function loadHomeFeed() {
-    loadPostsIntoContainer('/api/posts', 'posts-container');
+    loadPostsIntoContainer('${window.APP_CONFIG.BACKEND_URL}/api/posts', 'posts-container');
 }
 
 async function goToMyPublicProfile() {
-    const res = await fetch('/api/check-auth');
+    const res = await fetch('${window.APP_CONFIG.BACKEND_URL}/api/check-auth');
     const data = await res.json();
     if (data.is_logged_in) {
         navigateTo(`profile/${data.user}`);

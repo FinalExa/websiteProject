@@ -4,8 +4,8 @@ async function loadProfilePosts(username) {
 
     try {
         const [postsReq, templateReq] = await Promise.all([
-            fetch(`/api/posts?username=${username}`),
-            fetch('/api/content/post-item')
+            fetch(`${window.APP_CONFIG.BACKEND_URL}/api/posts?username=${username}`),
+            fetch('${window.APP_CONFIG.BACKEND_URL}/api/content/post-item')
         ]);
 
         const posts = await postsReq.json();
@@ -32,7 +32,7 @@ async function uploadPic() {
     formData.append('file', fileInput.files[0]);
 
     try {
-        const response = await fetch('/api/upload-profile-pic', {
+        const response = await fetch('${window.APP_CONFIG.BACKEND_URL}/api/upload-profile-pic', {
             method: 'POST',
             body: formData
         });

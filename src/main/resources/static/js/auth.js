@@ -3,7 +3,7 @@ async function loadLoginView() {
     if (!container) return;
 
     try {
-        const response = await fetch('/api/content/login');
+        const response = await fetch('${window.APP_CONFIG.BACKEND_URL}/api/content/login');
         container.innerHTML = await response.text();
         attachLoginListener();
     } catch (error) {
@@ -16,7 +16,7 @@ async function loadRegisterView() {
     if (!container) return;
 
     try {
-        const response = await fetch('/api/content/register');
+        const response = await fetch('${window.APP_CONFIG.BACKEND_URL}/api/content/register');
         container.innerHTML = await response.text();
         attachRegisterListener();
     } catch (error) {
@@ -35,7 +35,7 @@ function attachLoginListener() {
         const password = document.getElementById('login-password').value;
 
         try {
-            const response = await fetch('/api/login', {
+            const response = await fetch('${window.APP_CONFIG.BACKEND_URL}/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
@@ -61,7 +61,7 @@ function attachLoginListener() {
 
 async function handleLogout() {
     try {
-        const response = await fetch('/api/logout', { method: 'POST' });
+        const response = await fetch('${window.APP_CONFIG.BACKEND_URL}/api/logout', { method: 'POST' });
 
         if (response.ok) {
             showToast("Logged out successfully", 'success');

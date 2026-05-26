@@ -13,7 +13,7 @@ async function toggleNotificationDropdown(event) {
 
     if (dropdown.style.display === 'none' && !isDropdownTemplateLoaded) {
         try {
-            const response = await fetch('/api/content/notification-dropdown');
+            const response = await fetch('${window.APP_CONFIG.BACKEND_URL}/api/content/notification-dropdown');
             if (response.ok) {
                 dropdown.innerHTML = await response.text();
                 isDropdownTemplateLoaded = true;
@@ -36,19 +36,19 @@ async function loadUserNotifications() {
     if (!listContainer) return;
 
     try {
-        const dataResponse = await fetch('/api/notifications');
+        const dataResponse = await fetch('${window.APP_CONFIG.BACKEND_URL}/api/notifications');
         if (!dataResponse.ok) return;
         const notifications = await dataResponse.json();
 
         if (notifications.length === 0) {
-            const emptyTemplateResponse = await fetch('/api/content/notification-empty');
+            const emptyTemplateResponse = await fetch('${window.APP_CONFIG.BACKEND_URL}/api/content/notification-empty');
             if (emptyTemplateResponse.ok) {
                 listContainer.innerHTML = await emptyTemplateResponse.text();
             }
             return;
         }
 
-        const itemTemplateResponse = await fetch('/api/content/notification-item');
+        const itemTemplateResponse = await fetch('${window.APP_CONFIG.BACKEND_URL}/api/content/notification-item');
         if (!itemTemplateResponse.ok) return;
         const itemTemplateHtml = await itemTemplateResponse.text();
 
@@ -76,7 +76,7 @@ async function updateNotificationBadge() {
     if (!badge) return;
 
     try {
-        const response = await fetch('/api/notifications/unread-count');
+        const response = await fetch('${window.APP_CONFIG.BACKEND_URL}/api/notifications/unread-count');
         if (!response.ok) return;
         const data = await response.json();
 
@@ -93,7 +93,7 @@ async function updateNotificationBadge() {
 
 async function handleNotificationClick(targetUrl, notificationId) {
     try {
-        await fetch(`/api/notifications/${notificationId}/read`, { method: 'PUT' });
+        await fetch(`${window.APP_CONFIG.BACKEND_URL}/api/notifications/${notificationId}/read`, { method: 'PUT' });
 
         const dropdown = document.getElementById('notification-dropdown');
         if (dropdown) {
@@ -113,7 +113,7 @@ async function handleNotificationClick(targetUrl, notificationId) {
 async function markAllNotificationsRead(event) {
     if (event) event.stopPropagation();
     try {
-        const response = await fetch('/api/notifications/mark-all-read', { method: 'POST' });
+        const response = await fetch('${window.APP_CONFIG.BACKEND_URL}/api/notifications/mark-all-read', { method: 'POST' });
         if (response.ok) {
             updateNotificationBadge();
             loadUserNotifications();

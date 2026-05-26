@@ -24,7 +24,7 @@ async function handleRegistration(e) {
     const data = Object.fromEntries(formData.entries());
 
     try {
-        const response = await fetch('/api/register', {
+        const response = await fetch('${window.APP_CONFIG.BACKEND_URL}/api/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
